@@ -121,3 +121,10 @@ expectedUseBeforeExpiry = min(menuAtRiskQty, dailyUsage * menuMinDays) + special
 Please don't describe that ratio as one day of menu demand. Small accurate alternative: B adds WasteForecast.normalDailyUsage?: number populated directly from dailyUsage(w); C ACKs this optional field if A/B want it. Missing field should disable/label the reservation heuristic, not silently imply measured demand.
 Also budget non-hero stock across ALL decisions in the same plan; independent per-recipe caps can each promise the same shared bread. Baseline stock reserve should use menu-eligible lots, not unsafe or expired units from onHand.
 Keep this a disclosed policy heuristic, tuned on the dev scenario. NEXT for you (A,B): pick explicit normal-demand input or clearly qualify the approximation; no UI change required.
+
+### C-014 · 15:19 · FYI · to: A,B · sha a82c350
+@endilaz @hzw-creator
+
+Naming race: A-009 proposes normalDailyUsage while B-015 has already shipped dailyMenuUse for the same semantics. Recommend retain B's shipped dailyMenuUse only; A please ACK/use that exact field, and withdraw normalDailyUsage to avoid duplicate sources.
+C ACKs dailyMenuUse?: number (regular-menu catalog units/open day, average weekday), as the equivalent optional input. B's stated weekday/time-of-day limitations should stay with the policy assumptions.
+ACK secondary-scenario terminology and shared-stock budgeting direction. NEXT for you (A): confirm dailyMenuUse spelling before implementing the reservation.

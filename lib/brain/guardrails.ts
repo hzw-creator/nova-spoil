@@ -3,6 +3,7 @@
  * These are the "sad path" of the demo. Keep them in plain code, never in a prompt only.
  */
 import type { Freshness, Recipe, Special } from "@/shared/contracts";
+import { isValidPricingSettings, specialPriceFloor, type PricingOptions } from "./pricing";
 
 export interface GuardResult {
   blocked: boolean;
@@ -31,13 +32,16 @@ export function checkRecipe(recipeId: string, heroId: string, recipes: Recipe[])
 }
 
 /** Rule 3: price sanity — never below 1.5× ingredient cost, discount ≤ 60%. */
-export function checkPrice(s: Pick<Special, "price" | "originalPrice" | "discountPct">, ingredientCost: number): GuardResult {
+export function checkPrice(s: Pick<Special, "price" | "originalPrice" | "discountPct">, ingredientCost: number, pricing?: PricingOptions): GuardResult {
+  if (pricing !== undefined && !isValidPricingSettings(pricing)) return { blocked: true, reason: "Invalid requested pricing settings." };
   if (![s.price, s.originalPrice, s.discountPct, ingredientCost].every(Number.isFinite) ||
       s.price <= 0 || s.originalPrice <= 0 || ingredientCost < 0)
     return { blocked: true, reason: "Price, list price, discount and cost must be finite valid numbers." };
   if (s.price > s.originalPrice) return { blocked: true, reason: "Special price exceeds the recipe list price." };
   if (s.price + 1e-9 < ingredientCost * 1.5) return { blocked: true, reason: "Price below 1.5× ingredient cost." };
   const actualDiscount = (1 - s.price / s.originalPrice) * 100;
+  if (pricing && s.price + 1e-9 < specialPriceFloor(ingredientCost, s.originalPrice, pricing))
+    return { blocked: true, reason: `Price violates requested tracked-ingredient margin ${pricing.minGrossMarginPct}% or discount cap ${pricing.maxDiscountPct}%.` };
   if (s.discountPct < 0 || s.discountPct > 60 || actualDiscount > 60 + 1e-9)
     return { blocked: true, reason: "Discount outside the 0–60% cap." };
   if (Math.abs(s.discountPct - actualDiscount) > 0.5 + 1e-9)

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Ingredient, ScanResult } from "@/shared/contracts";
+import { isValidPricingSettings, type PricingOptions } from "./pricing";
 
 export class BrainError extends Error {
   constructor(message: string, public readonly status = 400) {
@@ -35,6 +36,18 @@ export async function readImageRequest(req: Request): Promise<string> {
   const body = await req.json().catch(() => { throw new BrainError("Request body must be valid JSON."); });
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new BrainError("Request body must be an object.");
   return validateImageInput("imageDataUrl" in body ? body.imageDataUrl : "");
+}
+
+export function validatePricingSettings(value: unknown): PricingOptions | undefined {
+  if (value === undefined) return undefined;
+  if (!isValidPricingSettings(value)) throw new BrainError("pricing requires finite minGrossMarginPct 35..80 and maxDiscountPct 0..60.");
+  return { minGrossMarginPct: value.minGrossMarginPct, maxDiscountPct: value.maxDiscountPct };
+}
+
+export async function readRunRequest(req: Request): Promise<{ imageDataUrl: string; pricing?: PricingOptions }> {
+  const body = await req.json().catch(() => { throw new BrainError("Request body must be valid JSON."); });
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new BrainError("Request body must be an object.");
+  return { imageDataUrl: validateImageInput("imageDataUrl" in body ? body.imageDataUrl : ""), pricing: validatePricingSettings(body.pricing) };
 }
 
 /** For the preview endpoint; this does not establish camera or stored-plan authority. */

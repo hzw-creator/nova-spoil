@@ -5,7 +5,7 @@ import type {
 } from "@/shared/contracts";
 import { checkFoodSafety, checkPrice, checkRecipe } from "./guardrails";
 import { chatJSON, hasKey, TEXT_MODEL } from "./openrouter";
-import { quoteSpecial } from "./pricing";
+import { quoteSpecial, specialPriceFloor, type PricingOptions } from "./pricing";
 import { mentionsSpoilage } from "./vision";
 
 const SPECIAL_HOURS = 6;
@@ -14,6 +14,10 @@ type Candidate = { recipe: Recipe; quote: ReturnType<typeof quoteSpecial> };
 
 /** Deterministic, synchronous and LLM-free. Shared stock is budgeted across the entire plan. */
 export function decideOffline(world: WorldState, forecasts: WasteForecast[], scan?: ScanResult): AgentDecision[] {
+  return decideWithPricing(world, forecasts, scan);
+}
+
+function decideWithPricing(world: WorldState, forecasts: WasteForecast[], scan?: ScanResult, pricing?: PricingOptions): AgentDecision[] {
   const decisions: AgentDecision[] = [];
   const seen = new Set<string>();
   const budget = structuredClone(world.inventory);
@@ -35,10 +39,12 @@ export function decideOffline(world: WorldState, forecasts: WasteForecast[], sca
     const hero = world.ingredients.find((i) => i.id === forecast.ingredientId);
     if (!hero || seen.has(hero.id)) continue;
     seen.add(hero.id);
-    const candidate = candidatesFor(world, forecasts, forecast, budget)[0];
+    const candidate = candidatesFor(world, forecasts, forecast, budget, pricing)[0];
     if (!candidate) {
-      decisions.push({ ingredientId: hero.id, action: "CUT_PREP", prepCutPct: 30,
-        rationale: `No makeable recipe within price and menu-stock limits for ${hero.name}; recommend 30% less prep.`,
+      const reason = pricing ? `No makeable ${hero.name} recipe fits current stock, minimum tracked-ingredient margin ${pricing.minGrossMarginPct}% and maximum discount ${pricing.maxDiscountPct}%; a price floor above list price prevents an offer.`
+        : `No makeable recipe within price and menu-stock limits for ${hero.name}; recommend 30% less prep.`;
+      decisions.push({ ingredientId: hero.id, action: pricing ? "NO_ACTION" : "CUT_PREP", prepCutPct: pricing ? undefined : 30,
+        rationale: reason, safety: pricing ? { blocked: true, reason } : undefined,
         projectedWasteUsdBefore: forecast.projectedWasteUsd, projectedWasteUsdAfter: forecast.projectedWasteUsd });
       continue;
     }
@@ -58,7 +64,7 @@ const choiceSchema = z.object({
 }).strict();
 type Choice = z.infer<typeof choiceSchema>;
 
-export async function planActions(scan: ScanResult, world: WorldState, forecasts: WasteForecast[]): Promise<PlanResult> {
+export async function planActions(scan: ScanResult, world: WorldState, forecasts: WasteForecast[], pricing?: PricingOptions): Promise<PlanResult> {
   const started = Date.now();
   const planId = `plan_${crypto.randomUUID()}`;
   const trace: AgentStep[] = [];
@@ -73,13 +79,15 @@ export async function planActions(scan: ScanResult, world: WorldState, forecasts
   }
   for (const f of forecasts.filter((x) => x.projectedWasteQty > 0))
     step("forecast", `${f.ingredientId}: ${round(f.projectedWasteQty)} catalog units ($${f.projectedWasteUsd.toFixed(2)}) projected waste`);
-  const decisions = decideOffline(world, forecasts, scan);
+  if (pricing) step("tool", `Pricing: margin ≥${pricing.minGrossMarginPct}% · discount ≤${pricing.maxDiscountPct}%`,
+    "Tracked-ingredient gross margin only. Price is at least cost / (1 - margin), the discount floor, and 1.5× cost; it cannot exceed catalog list price.");
+  const decisions = decideWithPricing(world, forecasts, scan, pricing);
   const choices = new Map<string, Choice>();
   const model = TEXT_MODEL();
   if (hasKey() && !scan.mock && decisions.some((d) => d.action === "CREATE_SPECIAL")) {
     const options = decisions.filter((d) => d.action === "CREATE_SPECIAL").map((d) => ({
       ingredientId: d.ingredientId,
-      candidates: candidatesFor(world, forecasts, forecasts.find((f) => f.ingredientId === d.ingredientId)!, world.inventory)
+      candidates: candidatesFor(world, forecasts, forecasts.find((f) => f.ingredientId === d.ingredientId)!, world.inventory, pricing)
         .map(({ recipe, quote }) => ({ recipeId: recipe.id, name: recipe.name, ingredients: recipe.ingredients,
           price: quote.price, discountPct: quote.discountPct, maxPortions: quote.units, onMenu: recipe.onMenu })),
     }));
@@ -105,7 +113,7 @@ export async function planActions(scan: ScanResult, world: WorldState, forecasts
     if (decision.safety?.blocked) step("guardrail", `Blocked: ${decision.safety.reason}`, decision.rationale);
     if (decision.action !== "CREATE_SPECIAL" || !decision.special) continue;
     const forecast = forecasts.find((f) => f.ingredientId === decision.ingredientId)!;
-    const candidates = candidatesFor(world, forecasts, forecast, budget);
+    const candidates = candidatesFor(world, forecasts, forecast, budget, pricing);
     const choice = choices.get(decision.ingredientId);
     const selected = choice && validCopy(choice) ? candidates.find((c) => c.recipe.id === choice.recipeId) : undefined;
     const fallback = candidates.find((c) => c.recipe.id === decision.special?.recipeId) ?? candidates[0];
@@ -124,7 +132,7 @@ export async function planActions(scan: ScanResult, world: WorldState, forecasts
       usedLlm = true;
       step("llm", `${model} selected ${candidate.recipe.name}`, choice.description);
     } else if (choice) step("llm", `Rejected text-model choice for ${decision.ingredientId} · deterministic fallback`);
-    const guards = [checkRecipe(special.recipeId, decision.ingredientId, world.recipes), checkPrice(special, candidate.quote.ingredientCost)];
+    const guards = [checkRecipe(special.recipeId, decision.ingredientId, world.recipes), checkPrice(special, candidate.quote.ingredientCost, pricing)];
     const blocked = guards.find((g) => g.blocked);
     if (blocked) {
       decision.action = "NO_ACTION"; decision.special = undefined; decision.safety = blocked;
@@ -134,7 +142,9 @@ export async function planActions(scan: ScanResult, world: WorldState, forecasts
     decision.special = special;
     decision.rationale = `Select approved recipe ${candidate.recipe.name} at −${special.discountPct}%; publishing does not guarantee sales.`;
     spendBudget(budget, candidate.recipe, special.unitsAvailable);
-    step("tool", `Quoted ${special.name}: $${special.originalPrice.toFixed(2)} → $${special.price.toFixed(2)}`, decision.rationale);
+    const cost = candidate.quote.ingredientCost;
+    step("tool", `Quoted ${special.name}: $${special.originalPrice.toFixed(2)} → $${special.price.toFixed(2)}`,
+      `${decision.rationale} Tracked cost $${cost.toFixed(2)}; floor $${specialPriceFloor(cost, special.originalPrice, pricing).toFixed(2)}; gross margin ${((1 - cost / special.price) * 100).toFixed(1)}%.`);
   }
   return { planId, decisions, trace, latencyMs: Date.now() - started, mock: !usedLlm };
 }
@@ -144,7 +154,7 @@ function validCopy(choice: Choice): boolean {
     !/\b(?:safe|healthy|healthier|organic|certified|allergen|gluten.free|cures?|detox|perfectly ripe)\b/i.test(choice.name + choice.description);
 }
 
-function candidatesFor(world: WorldState, forecasts: WasteForecast[], forecast: WasteForecast, budget: InventoryLot[]): Candidate[] {
+function candidatesFor(world: WorldState, forecasts: WasteForecast[], forecast: WasteForecast, budget: InventoryLot[], pricing?: PricingOptions): Candidate[] {
   const hero = world.ingredients.find((i) => i.id === forecast.ingredientId);
   if (!hero) return [];
   const lots = sellableLots(budget, hero.id);
@@ -152,8 +162,8 @@ function candidatesFor(world: WorldState, forecasts: WasteForecast[], forecast: 
   const freshness = Math.min(...lots.map((l) => l.freshness)) as Freshness;
   return world.recipes.flatMap((recipe): Candidate[] => {
     if (checkRecipe(recipe.id, hero.id, [recipe]).blocked || recipe.ingredients.some((l) => !world.ingredients.some((i) => i.id === l.ingredientId))) return [];
-    const quote = quoteSpecial(recipe, hero, forecast, freshness, world.ingredients);
-    if (checkPrice({ ...quote, originalPrice: recipe.basePrice }, quote.ingredientCost).blocked) return [];
+    const quote = quoteSpecial(recipe, hero, forecast, freshness, world.ingredients, pricing);
+    if (checkPrice({ ...quote, originalPrice: recipe.basePrice }, quote.ingredientCost, pricing).blocked) return [];
     quote.units = Math.min(quote.units, maxPortions(recipe, hero.id, budget, forecasts));
     return quote.units >= 1 ? [{ recipe, quote }] : [];
   }).sort((a, b) => Number(a.recipe.onMenu) - Number(b.recipe.onMenu) ||

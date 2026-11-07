@@ -7,7 +7,8 @@
  */
 export { scanImage } from "./vision";
 export { planActions, decideOffline } from "./agent";
-export { quoteSpecial } from "./pricing";
+export { quoteSpecial, specialPriceFloor } from "./pricing";
+export type { PricingOptions } from "./pricing";
 export { checkFoodSafety, checkRecipe, checkPrice } from "./guardrails";
 export type { GuardResult } from "./guardrails";
-export { BrainError, brainErrorResponse, readImageRequest, validateScan } from "./validation";
+export { BrainError, brainErrorResponse, readImageRequest, readRunRequest, validatePricingSettings, validateScan } from "./validation";

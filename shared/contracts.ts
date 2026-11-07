@@ -1,7 +1,7 @@
 /**
  * shared/contracts.ts — THE interface between agents A (Brain), B (World), C (UI).
  *
- * Owner: Agent B (endilaz) applies changes, but ONLY via the contract-change
+ * Owner: Agent B (hzw-creator) applies changes, but ONLY via the contract-change
  * process in COMMS.md (propose on the board → affected agents ack → B edits).
  * Adding a new OPTIONAL field is cheap; renaming/removing a field breaks others.
  *

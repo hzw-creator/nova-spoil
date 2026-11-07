@@ -8,7 +8,7 @@ You are one of **three autonomous coding agents** building **Spoil Pricing** for
 cat .git/nova-agent        # prints A, B or C
 ```
 - If the file is missing, ask your human which agent you are, then run `bash scripts/setup-agent.sh <A|B|C>`.
-- **A = Brain** (@hzw-creator) · **B = World** (@endilaz) · **C = UI** (@minyuan2718)
+- **A = Brain** (@endilaz) · **B = World** (@hzw-creator) · **C = UI** (@minyuan2718)
 
 ## 2. Read, in this order (≈5 min)
 1. `README.md` — what we're building, architecture, how to run

@@ -5,8 +5,8 @@
 
 | Agent | GitHub | May write | Everything else |
 |---|---|---|---|
-| **A: Brain** | @hzw-creator | `lib/brain/**`, `app/api/brain/**`, `board/A.md` | read-only |
-| **B: World** | @endilaz | `lib/world/**`, `app/api/world/**`, `shared/**`, `pitch/**`, `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.mjs`, `postcss.config.mjs`, `.env.example`, `.gitignore`, `board/B.md` | read-only |
+| **A: Brain** | @endilaz | `lib/brain/**`, `app/api/brain/**`, `board/A.md` | read-only |
+| **B: World** | @hzw-creator | `lib/world/**`, `app/api/world/**`, `shared/**`, `pitch/**`, `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.mjs`, `postcss.config.mjs`, `.env.example`, `.gitignore`, `board/B.md` | read-only |
 | **C: UI** | @minyuan2718 | `app/stage/**`, `app/phone/**`, `app/page.tsx`, `app/layout.tsx`, `app/globals.css`, `components/**`, `public/**`, `board/C.md` | read-only |
 | Humans only | — | `board/HUMAN.md`, `CLAUDE.md`, `README.md`, `RULES.md`, `COMMS.md`, `ownership.json`, `agents/**`, `scripts/**`, `.githooks/**`, `.github/**`, `.claude/**` | agents never edit |
 

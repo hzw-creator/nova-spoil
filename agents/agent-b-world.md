@@ -1,4 +1,4 @@
-# Agent B — World (@endilaz)
+# Agent B — World (@hzw-creator)
 **You own:** `lib/world/**`, `app/api/world/**`, `shared/**` (contracts + fixtures), `pitch/**`, and root config (`package.json`, `package-lock.json`, `tsconfig.json`, `next.config.mjs`, `postcss.config.mjs`, `.env.example`, `.gitignore`).
 **Mission:** a believable café that reacts to the agent, honest numbers that prove the value, and a repo that always builds. You're also the **contract keeper** and the **integration owner**.
 

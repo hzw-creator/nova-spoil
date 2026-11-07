@@ -1,4 +1,4 @@
-# Agent A — Brain (@hzw-creator)
+# Agent A — Brain (@endilaz)
 **You own:** `lib/brain/**`, `app/api/brain/**`. Read-only everywhere else.
 **Mission:** make the "camera sees bananas → agent invents a priced special" moment real, fast (<4 s), and safe.
 

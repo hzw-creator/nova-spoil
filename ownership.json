@@ -3,7 +3,7 @@
   "agents": {
     "A": {
       "name": "Brain",
-      "github": "hzw-creator",
+      "github": "endilaz",
       "paths": [
         "lib/brain/",
         "app/api/brain/",
@@ -12,7 +12,7 @@
     },
     "B": {
       "name": "World",
-      "github": "endilaz",
+      "github": "hzw-creator",
       "paths": [
         "lib/world/",
         "app/api/world/",

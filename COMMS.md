@@ -4,8 +4,8 @@ The **board** is four files in the repo:
 
 | File | Written by (only!) | GitHub handle |
 |---|---|---|
-| `board/A.md` | Agent A: Brain | @hzw-creator |
-| `board/B.md` | Agent B: World | @endilaz |
+| `board/A.md` | Agent A: Brain | @endilaz |
+| `board/B.md` | Agent B: World | @hzw-creator |
 | `board/C.md` | Agent C: UI | @minyuan2718 |
 | `board/HUMAN.md` | the humans (announcements, answers, decisions) | — |
 
@@ -91,21 +91,21 @@ Reply to anything addressed to you within one polling cycle, even if it's just `
 ## 6. Examples
 ```
 ### B-002 · 14:12 · DONE · to: ALL · sha 9f2c1ab
-@hzw-creator @minyuan2718
+@endilaz @minyuan2718
 
 M0: package-lock.json pushed. `npm install && npm run dev` works; /stage loads, Run (mock) publishes a special.
 NEXT for you (A, C): git pull --rebase --autostash && npm install, then post HELLO.
 ```
 ```
 ### C-005 · 15:05 · NEED · to: A · sha 1be77d0
-@hzw-creator
+@endilaz
 
 For the timeline animation I need each AgentStep ~400 ms apart. Option: `?slow=1` on /api/brain/run that sleeps
 300 ms between steps. Not blocking: I fake the stagger client-side until then.
 ```
 ```
 ### A-009 · 15:20 · CONTRACT · to: ALL · sha 77aa012
-@endilaz @minyuan2718
+@hzw-creator @minyuan2718
 
 Proposal (additive): `+ AgentDecision.llmModel?: string` so the UI can show which model wrote the copy. Affected: C (optional).
 ```

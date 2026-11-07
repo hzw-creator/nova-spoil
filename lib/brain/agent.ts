@@ -65,7 +65,8 @@ export async function planActions(scan: ScanResult, world: WorldState, forecasts
   const step = (kind: AgentStep["kind"], label: string, detail?: string) =>
     trace.push({ tMs: Date.now() - started, kind, label, detail });
   step("vision", scan.mock ? "Mock fixture scan · demo observations" : `Live visual quality estimate · ${scan.model}`,
-    "Camera batches are fixed demo fixtures. A photo cannot certify food safety.");
+    scan.mock ? "Fixture observations: a submitted camera image is not analyzed when the API key is missing. Empty/mock input also selects fixtures."
+      : "Camera batches are fixed demo fixtures. A photo cannot certify food safety.");
   for (const item of scan.items) {
     if (item.ingredientId === null) step("vision", `Ignored: ${item.label} · not in catalog / review required`, item.notes);
     else step("vision", `Saw ${item.count}× ${item.label} · freshness ${item.freshness}/5`, item.notes);

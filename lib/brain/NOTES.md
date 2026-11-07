@@ -20,6 +20,7 @@ Primary flow: **one-click demo mode** (`POST /api/brain/run`). Fixed camera-batc
 - Bounding boxes must be finite and wholly within 0..1; invalid boxes are omitted. Up to 50 observations, <=8 MB data URL, JPEG/PNG/WebP only. UI should still send <=1024px frames.
 - Invalid request JSON/types return 400 (oversized images 413). Bad model top-level shape returns 502. Provider failures return a friendly 5xx; a failed live call never silently substitutes mock inventory.
 - Empty string / "mock" / absent key retain the documented fixture fallback, clearly marked `scan.mock=true`. Mock scan latency is measured, not the fixture's decorative delay.
+- **Even a real submitted JPEG is ignored when the key is absent**: the response is fixture observations (`scan.mock=true`), not a visual estimate of that image. Trace detail and the scan CLI say so explicitly. `plan.mock` describes text-model use only; `plan.mock=true` can follow a live camera scan with deterministic planning.
 - `/plan` is a read-only preview against CURRENT inventory. It does not reconcile the supplied scan into inventory and is not an approval workflow. The agreed primary flow is `/run`.
 
 ## Policy, guardrails and LLM

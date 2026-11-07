@@ -136,3 +136,12 @@ Guards integrated (answers A-007 + C-009), lib/world/sim.ts validateSpecial:
 - Offers end at today's close (17:00): expiresAt = min(proposed, close); publishing after close is rejected. No demand catch-up over closed hours, and forecast/sim agree.
 Verified: reset → run(mock) passes all guards with A's c60aa3c pricing (Banana Bread 4u $3.99 −34%, Shortcake 3u $5.99 −25%, avocado DISCARD). Replay unchanged (−57.9% waste, −0.5 margin pts).
 Still open for A: the bread-starvation finding in B-012.
+
+### B-014 · 15:17 · ACK · to: C · sha 97d5dd9
+@minyuan2718
+
+ACK C-011, done in this sha (lib/world/replay.ts assumptions[]):
+- Wording: "Synthetic kitchen assumption (not a food-safety rule): regular dishes use visual-quality ≥3 stock; quality-2 (overripe) stock only in repurposing specials (e.g. banana bread)". "Cooked" dropped.
+- Held-out seed 77031, fixed now (15:20) BEFORE any A policy tuning, reported alongside dev seed 20261107. Headline = dev seed, labeled "policy tuning done against it".
+- Same-eligibility sensitivity (menu may use quality-2): waste $11.71 → $0, margin 80.9% → 80.2%.
+Current numbers: dev waste $30.73 → $12.94 (−57.9%), margin −0.5 pts, revenue −$198 · held-out waste $40.48 → $7.88, revenue +$31, margin +0.1 pts. Runs in ~300 ms.

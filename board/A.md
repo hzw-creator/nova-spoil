@@ -217,3 +217,13 @@ Pricing implementation ready in A's working tree (quotes/guards/planning + trace
 Please ship shared PricingSettings/RunRequest.pricing and confirm optional applyDecisions pricing signature by~16:34 so C can typecheck its controls and I can finish server integration. A's run route already revalidates requested pricing against current server-derived costs synchronously immediately before legacy applyDecisions; it does not wait on the new signature to enforce run settings.
 Existing absent-settings and decideOffline replay behavior preserved. Only finite margin35..80 / discount0..60 accepted; invalid settings return400 before scan/world mutation.
 NEXT for you (B): contract/validation hook + all-catalog batches from C-022. A will publish code once final API checks pass.
+
+### A-023 · 16:33 · DONE · to: B,C · sha 56b6619
+@hzw-creator @minyuan2718
+
+C-022/A-021 pricing support shipped in56b6619. /api/brain/run now accepts optional pricing {minGrossMarginPct,maxDiscountPct}; malformed/null/nonfinite/out-of-range values return400 BEFORE scan/world mutation. Absent settings and replay behavior unchanged.
+quoteSpecial(..., pricing?), planActions(..., pricing?) and checkPrice(s,cost,pricing?) are backward-compatible. Floor=max(1.5*cost, cost/(1-margin/100), list*(1-discount/100)); rounding cannot violate floor or exceed a feasible list price. Infeasible constraints -> no offer + explanation. LLM never sets price.
+Run passes validated settings into planner AND synchronously checks requested constraints against current server-derived costs immediately before applyDecisions. Trace shows requested bounds, tracked cost, floor and actual tracked-ingredient margin.
+Proof: unit checks PASS (invalid bounds, 0% discount, infeasible margin, fractional list price); API smoke PASS (invalid400/no mutation, explicit40% margin/0% discount publishes at list); typecheck PASS. Computed replay still -63.4% waste/-0.1pt margin (legacy policy unchanged).
+B's shared PricingSettings/RunRequest.pricing and optional applyDecisions hook are STILL PENDING; A used a matching structural PricingOptions type and preserved legacy world signature. No shared/world/C files edited.
+NEXT for you (B): ship canonical shared fields + optional publication hook and all-catalog batches from C-022; checkPrice now accepts requested settings. NEXT for you (C): pull A support and test controls on NEXT scan; await B shared type to complete API typing. Server run enforcement already works.

@@ -26,7 +26,7 @@ export function quoteSpecial(
   const urgency = clamp((3 - forecast.minDaysLeft) / 2.5, 0, 1) * (freshness <= 2 ? 1 : 0.7);
   // surplus: more units to move → deeper discount (saturates at 15 units)
   const surplus = clamp(units / 15, 0, 1);
-  let discountPct = Math.round(10 + 30 * urgency + 15 * surplus); // 10%..55%
+  const targetDiscountPct = Math.round(10 + 30 * urgency + 15 * surplus); // 10%..55%
 
   const ingredientCost = recipe.ingredients.reduce((s, l) => {
     const ing = catalog.find((c) => c.id === l.ingredientId);
@@ -34,17 +34,23 @@ export function quoteSpecial(
   }, 0);
   // floor: never price below 1.5× ingredient cost
   const floor = ingredientCost * 1.5;
-  let price = roundPrice(recipe.basePrice * (1 - discountPct / 100));
+  let price = Math.min(recipe.basePrice, roundPrice(recipe.basePrice * (1 - targetDiscountPct / 100)));
   if (price < floor) {
-    price = roundPrice(floor);
-    discountPct = Math.max(0, Math.round((1 - price / recipe.basePrice) * 100));
+    price = roundPriceUp(floor);
   }
-  return { price, discountPct, units, ingredientCost: Math.round(ingredientCost * 100) / 100 };
+  const discountPct = Math.round((1 - price / recipe.basePrice) * 100);
+  return { price, discountPct, units, ingredientCost };
 }
 
 /** $X.49 / $X.99 style prices */
 function roundPrice(p: number) {
   const whole = Math.floor(p);
   return p - whole < 0.5 ? whole + 0.49 : whole + 0.99;
+}
+function roundPriceUp(p: number) {
+  const whole = Math.floor(p);
+  if (p <= whole + 0.49) return whole + 0.49;
+  if (p <= whole + 0.99) return whole + 0.99;
+  return whole + 1.49;
 }
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));

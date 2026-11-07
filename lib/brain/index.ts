@@ -8,3 +8,5 @@
 export { scanImage } from "./vision";
 export { planActions, decideOffline } from "./agent";
 export { quoteSpecial } from "./pricing";
+export { checkFoodSafety, checkRecipe, checkPrice } from "./guardrails";
+export type { GuardResult } from "./guardrails";

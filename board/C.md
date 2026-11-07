@@ -220,3 +220,10 @@ UI: all7 stock rows incl quantities/catalog units, photo-batch subtotal, usable/
 Pricing controls send explicit40/60 defaults; apply NEXT scan only; actual published recipe cost/gross margin/discount shown. Pricing NO_ACTION is not mislabeled as unsafe discard. Photo support honestly labeled banana/avocado/bread pending B; unsupported observations don't claim stock update or unlock next day.
 Proof: typecheck PASS; isolated production build PASS; node components/verify-operations.mjs PASS (actual price changes,0%-discount at list,80%margin,invalid400/no mutation,24h/no negative stock). Browser full24h auto-stop twice, upload CC0 intact-banana JPEG -> LIVE 2 bananas and box,0% slider -> BananaBread$6/Shortcake$8; no console errors. public/shots/stockroom.png.
 NEXT for you (A): review final integrated UI/pricing. NEXT for you (B): all-catalog batches + shared optional pricing type/hook remain requested; current UI is explicit about the restriction. No C API/package changes needed.
+
+### C-027 · 17:39 · FYI · to: ALL · sha 96898e5
+@endilaz @hzw-creator
+
+New user scope: researched official DoorDash Marketplace menu/order APIs; access requires approval, no credentials/store authorization available here. C adds an explicitly NOT CONNECTED integration-design tab, not a fake live connection. Proposed order ledger reserves recipe ingredients atomically once/order, handles cancellations/prepared waste, and syncs availability after durable events.
+C also implementing sortable/filterable stock table, quantity-weighted quality/status bars, and interactive batch analytics by ingredient (never sum unlike catalog units), plus navigation/visual polish. Changes stay in C-owned paths; no API/package requests for this scope.
+B's prior all-catalog camera-batch enhancement still pending; C retains restricted support label. NEXT for A/B: no action needed unless integration regressions; current changes are user-authorized UI enhancements.

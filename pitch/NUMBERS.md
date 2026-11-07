@@ -29,7 +29,7 @@ _Provenance: **computed** · policy: decideOffline v1 (A 1de3081: menu-stock res
 - Special demand: 0.3–1.05 orders/hr base (weak price response), ×3 launch burst decaying over ~40 min; random arrivals here (the live demo uses smoothed arrivals).
 - 25% of special orders replace a regular menu order (cannibalization). Specials draw from shared stock, so they can cause menu stockouts (lost menu sales: baseline 27, agent 31).
 - Margin = tracked-ingredient gross margin only: excludes pantry staples, labor, packaging, rent and platform fees.
-- Evaluates the deterministic offline policy only, not camera or LLM accuracy. The agent cannot change supplier orders here (it only adjusts them after an unsafe-item discard, which this replay has none of).
+- Evaluates the deterministic offline policy only, not camera or LLM accuracy. Supplier orders are fixed in both runs; the agent does not change them (reorder adjustments are not modeled).
 - Tuning history (dev seed): v0 policy cut waste 57.9% but lost $197.73 revenue and 0.5 margin pts (its specials used bread the menu needed). v1 adds a one-day menu-stock reserve for non-hero ingredients, a development-scenario heuristic, not independently validated.
 - Agent run: 9 specials published, 22 special orders (Strawberry Shortcake 3 sold / 1×, Warm Banana Bread 2 sold / 2×, Bananas Foster French Toast 11 sold / 3×, Sourdough Panzanella 4 sold / 2×, Spinach Shakshuka 2 sold / 1×).
 - Sensitivity, without the quality-≥3 kitchen assumption (menu may use quality-2 stock): waste $11.71 → $0, margin 80.9% → 80.6%.
@@ -52,7 +52,7 @@ Live-demo special orders arrive at the *expected* rate (smoothed, so the demo do
 Freshness numbers are **visual quality estimates** from a vision model, not food-safety certification. The freshness-1 block is a demo rule in plain code.
 
 ## 3. Brain (Agent A)
-- Vision model: **`google/gemini-2.5-flash` via OpenRouter**. Live reference photos (A-012): spotty banana 2.0 s, moldy avocado **1.3 s → visual quality 1, visible mold, blocked**. Full live `/run` (scan + text-model recipe pick + publish): **~3.7 s** (scan 2.7 s). Public reference photos, not yet the presenter camera. Mock path is offline (~850 ms fixture). More in `lib/brain/NOTES.md`.
+- Vision model: **`google/gemini-2.5-flash` via OpenRouter**. Live reference photos (A-012): a split-peel banana rated quality 1 (2.0 s; not the intact overripe happy path), moldy avocado **1.3 s → visual quality 1, visible mold, blocked**. Full live `/run` (scan + text-model recipe pick + publish): **~3.7 s** (scan 2.7 s). Public reference photos, not yet the presenter camera. The intact-overripe-banana happy path on the presenter camera is **still unverified**. The mock path is offline and effectively instant. More in `lib/brain/NOTES.md`.
 - If the live model call fails or times out, the planner falls back to the deterministic offline policy; it never substitutes fixture observations for a failed live scan.
 - The agent **selects approved recipes** from the kitchen's recipe book. It never invents dishes. Prices come from code (urgency + surplus, 1.5× cost floor, ≤60% off).
 

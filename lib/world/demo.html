@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spoil Pricing · Demo</title>
+<!--
+  Fallback demo view (human-authorized at 15:35 by hzw-creator while C's /stage was not started).
+  Owner: Agent B. Served by app/api/world/demo/route.ts. Uses ONLY the public HTTP API; no imports.
+  Keys: Space = scan (camera) · M = mock scan · P = play/pause · R = reset · V = replay view
+-->
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --line: #262b36; --text: #e8eaf0; --muted: #9aa3b2;
+    --accent: #ff5a36; --good: #2fbf71; --bad: #ff4d4f; --warn: #f5a524; --blue: #4da3ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+  header h1 span { color: var(--accent); }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .pill.demo { border-color: var(--warn); color: var(--warn); }
+  .clock { font-variant-numeric: tabular-nums; font-size: 18px; margin-left: 8px; }
+  .spacer { flex: 1; }
+  button { background: #222734; color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 12px; font: inherit; cursor: pointer; }
+  button:hover { border-color: #3a4152; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  kbd { font-size: 11px; opacity: .75; margin-left: 4px; }
+  main { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; grid-template-rows: minmax(0, 1fr) auto;
+    gap: 12px; padding: 12px; height: calc(100% - 55px); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-height: 0;
+    display: flex; flex-direction: column; overflow: hidden; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  /* camera */
+  .cam { position: relative; flex: 1; background: #000; border-radius: 8px; overflow: hidden; min-height: 200px; }
+  .cam video, .cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cam canvas { display: none; }
+  .cam .msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--muted); padding: 20px; }
+  .cam .boxlayer { position: absolute; inset: 0; pointer-events: none; }
+  .box { position: absolute; border: 3px solid var(--good); border-radius: 6px; }
+  .box.f1 { border-color: var(--bad); } .box.f2 { border-color: var(--warn); }
+  .box span { position: absolute; left: -3px; top: -26px; background: inherit; font-size: 13px; padding: 2px 6px; border-radius: 4px;
+    background: rgba(0,0,0,.75); white-space: nowrap; }
+  .scanbar { position: absolute; left: 0; right: 0; height: 3px; background: var(--accent); box-shadow: 0 0 18px var(--accent);
+    top: 0; display: none; animation: sweep 1.2s linear infinite; }
+  @keyframes sweep { from { top: 0; } to { top: 100%; } }
+  .prov { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  /* timeline */
+  .timeline { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+  .step { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 7px 9px; border-radius: 8px; background: #1d212a;
+    animation: pop .25s ease-out; }
+  .step .ic { text-align: center; }
+  .step .d { color: var(--muted); font-size: 12.5px; }
+  .step.guardrail { background: rgba(255,77,79,.12); border: 1px solid rgba(255,77,79,.5); }
+  .step.publish { background: rgba(47,191,113,.12); border: 1px solid rgba(47,191,113,.45); }
+  .shield { padding: 10px 12px; border-radius: 10px; background: rgba(255,77,79,.14); border: 2px solid var(--bad); animation: pop .3s ease-out; }
+  .shield b { color: var(--bad); }
+  @keyframes pop { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .empty { color: var(--muted); font-size: 13px; }
+  /* phone */
+  .phone { flex: 1; align-self: center; width: 100%; max-width: 330px; border: 10px solid #000; border-radius: 34px;
+    background: #fafafa; color: #111; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .phone .bar { background: var(--accent); color: #fff; padding: 12px 14px 10px; }
+  .phone .bar b { font-size: 16px; } .phone .bar div { font-size: 12px; opacity: .9; }
+  .phone .list { flex: 1; overflow: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .card.special { border: 2px solid var(--accent); animation: pop .35s ease-out; }
+  .card .t { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+  .card .p { color: var(--accent); white-space: nowrap; }
+  .card s { color: #888; font-weight: 400; margin-left: 4px; font-size: 12px; }
+  .card .desc { font-size: 12.5px; color: #444; margin-top: 3px; }
+  .card .meta { font-size: 11.5px; color: #666; margin-top: 4px; display: flex; justify-content: space-between; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; background: var(--accent); color: #fff; border-radius: 4px; padding: 1px 5px; margin-bottom: 4px; }
+  .card.menu { padding: 7px 10px; } .card.menu.off { opacity: .45; }
+  .sect { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: #777; margin: 4px 2px 0; }
+  .toast { position: absolute; left: 10px; right: 10px; top: 10px; background: #111; color: #fff; border-radius: 12px; padding: 10px 12px;
+    font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.35); transform: translateY(-140%); transition: transform .35s ease; z-index: 3; }
+  .toast.show { transform: none; }
+  .note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 6px; }
+  /* bottom */
+  .bottom { grid-column: 1 / -1; display: grid; grid-template-columns: 240px 1fr 1fr; gap: 12px; }
+  .map svg { width: 100%; height: 150px; display: block; }
+  .counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ctr { background: #1d212a; border-radius: 10px; padding: 8px 10px; }
+  .ctr .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ctr .l { font-size: 11.5px; color: var(--muted); }
+  .ctr.good .v { color: var(--good); } .ctr.bad .v { color: var(--bad); } .ctr.warn .v { color: var(--warn); }
+  .events { font-size: 12.5px; color: var(--muted); overflow: auto; max-height: 150px; }
+  .events div { padding: 2px 0; border-bottom: 1px dashed #232835; }
+  .events div b { color: var(--text); font-weight: 500; }
+  /* replay overlay */
+  .overlay { position: fixed; inset: 0; background: rgba(8,10,14,.92); display: none; align-items: center; justify-content: center; z-index: 10; padding: 24px; }
+  .overlay.show { display: flex; }
+  .replay { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px; width: min(1100px, 100%); max-height: 100%; overflow: auto; }
+  .replay h2 { margin: 0 0 4px; font-size: 22px; }
+  .badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
+  .badge.ok { background: rgba(47,191,113,.18); color: var(--good); } .badge.no { background: rgba(245,165,36,.18); color: var(--warn); }
+  .big { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+  .big div { background: #1d212a; border-radius: 12px; padding: 12px 14px; }
+  .big .v { font-size: 30px; font-weight: 800; } .big .l { color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .assump { margin-top: 12px; font-size: 12.5px; color: var(--muted); columns: 2; column-gap: 24px; }
+  .assump li { margin-bottom: 4px; break-inside: avoid; }
+  .err { color: var(--bad); }
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; height: auto; } .bottom { grid-template-columns: 1fr; } .assump { columns: 1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Spoil <span>Pricing</span></h1>
+  <span class="pill demo">DEMO MODE · one-click auto-run</span>
+  <span class="pill" id="cafe">—</span>
+  <span class="clock" id="clock">—</span>
+  <span class="spacer"></span>
+  <button id="bReset">Reset<kbd>R</kbd></button>
+  <button id="bScan" class="primary">Scan<kbd>Space</kbd></button>
+  <button id="bMock">Mock scan<kbd>M</kbd></button>
+  <button id="bPlay">▶ Play<kbd>P</kbd></button>
+  <button id="bReplay">7-day replay<kbd>V</kbd></button>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Kitchen camera</h2>
+    <div class="cam" id="cam">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="frame"></canvas>
+      <div class="boxlayer" id="boxes"></div>
+      <div class="scanbar" id="scanbar"></div>
+      <div class="msg" id="camMsg">Starting camera…</div>
+    </div>
+    <div class="prov" id="prov">Freshness = visual quality estimate (1–5), not a food-safety certification. Demo convention: one "camera batch" per banana / avocado / bread; a scan updates only that batch.</div>
+  </section>
+
+  <section class="panel">
+    <h2>Agent</h2>
+    <div class="timeline" id="timeline"><div class="empty">Press <b>Space</b> to scan the produce, or <b>M</b> for the reference scan.</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>Customer app</h2>
+    <div class="phone">
+      <div class="toast" id="toast"></div>
+      <div class="bar"><b id="phoneCafe">—</b><div>Delivery · 25–35 min</div></div>
+      <div class="list" id="phoneList"></div>
+    </div>
+    <div class="note">DoorDash-style prototype · simulated customers</div>
+  </section>
+
+  <section class="bottom">
+    <div class="panel map"><h2>Orders nearby</h2><svg id="map" viewBox="0 0 1 1" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="panel"><h2>Today</h2><div class="counters" id="counters"></div></div>
+    <div class="panel"><h2>Kitchen log</h2><div class="events" id="events"></div></div>
+  </section>
+</main>
+
+<div class="overlay" id="overlay"><div class="replay" id="replay"></div></div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = (n) => "$" + (Number(n) || 0).toFixed(2);
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const fmtClock = (iso) => {
+    const d = new Date(iso); if (isNaN(d)) return "—";
+    let h = d.getUTCHours(); const m = String(d.getUTCMinutes()).padStart(2, "0"); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+    return DAYS[d.getUTCDay()] + " " + h + ":" + m + " " + ap;
+  };
+
+  let world = null, playing = false, playTimer = null, busy = false, knownSpecials = new Set(), stream = null, tickInFlight = false;
+
+  async function api(path, body) {
+    const res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const json = await res.json().catch(() => ({ error: "bad JSON from " + path }));
+    if (!res.ok || json.error) throw new Error(json.error || res.status + " " + path);
+    return json;
+  }
+
+  // ───────── camera ─────────
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      $("video").srcObject = stream; $("camMsg").style.display = "none";
+    } catch (e) {
+      $("camMsg").textContent = "Camera unavailable (" + (e && e.name || "error") + "). Use Mock scan (M).";
+    }
+  }
+  function grabFrame() {
+    const v = $("video"); if (!stream || !v.videoWidth) return null;
+    const w = Math.min(1024, v.videoWidth), h = Math.round(v.videoHeight * (w / v.videoWidth));
+    const c = $("frame"); c.width = w; c.height = h; c.getContext("2d").drawImage(v, 0, 0, w, h);
+    return c.toDataURL("image/jpeg", 0.8);
+  }
+  function freeze(on) { $("frame").style.display = on ? "block" : "none"; if (!on) $("boxes").innerHTML = ""; }
+  function drawBoxes(items) {
+    $("boxes").innerHTML = (items || []).filter((i) => i.box).map((i) =>
+      '<div class="box f' + i.freshness + '" style="left:' + i.box.x * 100 + '%;top:' + i.box.y * 100 + '%;width:' + i.box.w * 100 + '%;height:' + i.box.h * 100 + '%">' +
+      '<span>' + esc(i.count + "× " + i.label) + " · " + i.freshness + "/5</span></div>").join("");
+  }
+
+  // ───────── timeline ─────────
+  const ICON = { vision: "👁", forecast: "📈", llm: "🧠", tool: "🏷", guardrail: "🛡", publish: "📣" };
+  function addStep(kind, label, detail) {
+    const el = document.createElement("div"); el.className = "step " + kind;
+    el.innerHTML = '<div class="ic">' + (ICON[kind] || "•") + '</div><div><div>' + esc(label) + "</div>" + (detail ? '<div class="d">' + esc(detail) + "</div>" : "") + "</div>";
+    $("timeline").appendChild(el); el.scrollIntoView({ block: "end", behavior: "smooth" });
+  }
+  function addShield(d) {
+    const el = document.createElement("div"); el.className = "shield";
+    el.innerHTML = "🛡 <b>Blocked: " + esc(d.ingredientId) + " not sold.</b><div class='d'>" + esc(d.safety && d.safety.reason || d.rationale) + "</div>";
+    $("timeline").appendChild(el); el.scrollIntoView({ block: "end", behavior: "smooth" });
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function animateRun(out) {
+    $("timeline").innerHTML = "";
+    const steps = (out.plan && out.plan.trace || []).slice().sort((a, b) => a.tMs - b.tMs);
+    for (const s of steps) { addStep(s.kind, s.label, s.detail); await sleep(320); }
+    for (const d of out.plan.decisions || []) if (d.safety && d.safety.blocked) { addShield(d); await sleep(320); }
+    // Publication truth = the returned world, not the plan (C-008 / C-017)
+    const live = new Set((out.world.specials || []).filter((s) => s.status === "live").map((s) => s.id));
+    for (const d of out.plan.decisions || []) {
+      if (!d.special || (d.safety && d.safety.blocked)) continue;
+      const sp = (out.world.specials || []).find((s) => s.id === d.special.id);
+      if (sp && live.has(sp.id)) addStep("publish", "Live on the app: " + sp.name + " " + money(sp.price) + " (was " + money(sp.originalPrice) + ", −" + sp.discountPct + "%)", sp.unitsAvailable + " available · " + sp.reason);
+      else addStep("guardrail", "Not published: " + d.special.name, "Server validation rejected it. See the kitchen log.");
+      await sleep(320);
+    }
+    const sm = out.scan.mock ? "reference scan (fixture)" : "live camera → " + esc(out.scan.model);
+    $("prov").innerHTML = "Last scan: <b>" + sm + "</b> · " + out.scan.latencyMs + " ms · plan: " + (out.plan.mock ? "deterministic policy" : "text model + guards") +
+      ". Freshness is a visual quality estimate, not a food-safety certification.";
+  }
+
+  // ───────── render world ─────────
+  function render(w) {
+    world = w;
+    $("clock").textContent = fmtClock(w.simTime);
+    $("cafe").textContent = w.restaurant.name + " · " + w.restaurant.neighborhood;
+    $("phoneCafe").textContent = w.restaurant.name;
+
+    // phone
+    const specials = (w.specials || []).filter((s) => s.status === "live" || s.status === "sold_out");
+    let html = "";
+    if (specials.length) html += '<div class="sect">Today only</div>';
+    for (const s of specials) {
+      const left = Math.max(0, s.unitsAvailable - s.unitsSold);
+      html += '<div class="card special"><span class="tag">' + (s.status === "live" ? "−" + s.discountPct + "% · TODAY ONLY" : "SOLD OUT") + "</span>" +
+        '<div class="t"><span>' + esc(s.emoji + " " + s.name) + '</span><span class="p">' + money(s.price) + "<s>" + money(s.originalPrice) + "</s></span></div>" +
+        '<div class="desc">' + esc(s.description) + "</div>" +
+        '<div class="meta"><span>' + (s.status === "live" ? left + " left" : s.unitsSold + " sold") + "</span><span>" + esc(s.reason) + "</span></div></div>";
+      if (!knownSpecials.has(s.id) && s.status === "live") { knownSpecials.add(s.id); toast("🔔 " + s.emoji + " " + s.name + ": today only, " + money(s.price) + " (was " + money(s.originalPrice) + ")"); }
+    }
+    html += '<div class="sect">Menu</div>';
+    for (const m of w.menu || []) html += '<div class="card menu' + (m.available ? "" : " off") + '"><div class="t"><span>' + esc(m.emoji + " " + m.name) + "</span><span>" + money(m.price) + (m.available ? "" : " · sold out") + "</span></div></div>";
+    $("phoneList").innerHTML = html;
+
+    // counters (labels agreed on the board: C-002 / B-005)
+    const mt = w.metrics;
+    const ctr = (cls, v, l) => '<div class="ctr ' + cls + '"><div class="v">' + v + '</div><div class="l">' + l + "</div></div>";
+    $("counters").innerHTML =
+      ctr("good", money(mt.wasteUsdAvoided), "At-risk ingredient cost used") +
+      ctr("good", money(mt.revenueRecoveredUsd), "Special sales") +
+      ctr("warn", money(mt.projectedWasteUsd), "Projected waste (estimate)") +
+      ctr("bad", money(mt.wasteUsdDiscarded), "Discarded (spoiled / quality 1)") +
+      ctr("", mt.ordersFromSpecials, "Orders from specials") +
+      ctr("", mt.ordersTotal, "Orders total");
+
+    // map
+    const now = new Date(w.simTime).getTime();
+    let svg = '<circle cx="0.5" cy="0.5" r="0.46" fill="none" stroke="#262b36" stroke-width="0.005"/>' +
+      '<circle cx="0.5" cy="0.5" r="0.25" fill="none" stroke="#20242e" stroke-width="0.004"/>';
+    for (const o of (w.recentOrders || []).slice().reverse()) {
+      const age = (now - new Date(o.at).getTime()) / 60000; const op = Math.max(0.15, 1 - age / 120);
+      svg += '<circle cx="' + o.x + '" cy="' + o.y + '" r="' + (o.fromSpecial ? 0.03 : 0.018) + '" fill="' + (o.fromSpecial ? "#ff5a36" : "#4da3ff") + '" opacity="' + op.toFixed(2) + '"/>';
+    }
+    svg += '<circle cx="' + w.restaurant.x + '" cy="' + w.restaurant.y + '" r="0.04" fill="#fff"/><text x="0.5" y="0.58" font-size="0.06" fill="#9aa3b2" text-anchor="middle">café</text>';
+    $("map").innerHTML = svg;
+
+    // events
+    $("events").innerHTML = (w.events || []).slice(0, 25).map((e) => "<div><b>" + esc(fmtClock(e.at).split(" ").slice(1).join(" ")) + "</b> " + esc(e.message) + "</div>").join("");
+  }
+  let toastTimer = null;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3500); }
+
+  // ───────── actions ─────────
+  function setBusy(b) { busy = b; for (const id of ["bReset", "bScan", "bMock"]) $(id).disabled = b; $("scanbar").style.display = b ? "block" : "none"; }
+  async function scan(mock) {
+    if (busy) return;
+    const wasPlaying = playing; if (playing) togglePlay(); // pause the clock while the agent works (C-017)
+    let img = "mock";
+    if (!mock) { img = grabFrame(); if (!img) { toast("Camera not ready, using the reference scan"); img = "mock"; } }
+    freeze(img !== "mock");
+    setBusy(true);
+    $("timeline").innerHTML = '<div class="step vision"><div class="ic">👁</div><div>Looking at the produce…</div></div>';
+    try {
+      const out = await api("/api/brain/run", { imageDataUrl: img });
+      if (img !== "mock") drawBoxes(out.scan.items);
+      render(out.world);
+      await animateRun(out);
+    } catch (e) {
+      $("timeline").innerHTML = '<div class="step guardrail"><div class="ic">⚠️</div><div><div>Scan failed</div><div class="d">' + esc(e.message) + " · Press M for the reference scan.</div></div></div>";
+    } finally {
+      setBusy(false);
+      setTimeout(() => freeze(false), 5000);
+      if (wasPlaying) togglePlay();
+    }
+  }
+  async function tickOnce() {
+    if (tickInFlight || busy) return; tickInFlight = true;
+    try { render(await api("/api/world/tick", { minutes: 10 })); } catch (e) { toast("Tick failed: " + e.message); togglePlay(); }
+    finally { tickInFlight = false; }
+  }
+  function togglePlay() {
+    playing = !playing; $("bPlay").textContent = playing ? "⏸ Pause" : "▶ Play"; $("bPlay").insertAdjacentHTML("beforeend", "<kbd>P</kbd>");
+    clearInterval(playTimer); if (playing) { tickOnce(); playTimer = setInterval(tickOnce, 1000); }
+  }
+  async function reset() {
+    if (busy) return; if (playing) togglePlay();
+    knownSpecials = new Set(); freeze(false);
+    $("timeline").innerHTML = '<div class="empty">Café reset. Press <b>Space</b> to scan, or <b>M</b> for the reference scan.</div>';
+    try { render(await api("/api/world/reset", {})); } catch (e) { toast("Reset failed: " + e.message); }
+  }
+
+  // ───────── replay ─────────
+  async function showReplay() {
+    $("overlay").classList.add("show");
+    $("replay").innerHTML = "<h2>7-day replay</h2><p class='empty'>Computing…</p>";
+    try {
+      const r = await api("/api/world/replay");
+      const b = r.totals.baseline, a = r.totals.withAgent;
+      const prov = r.provenance === "computed" ? '<span class="badge ok">COMPUTED · SIMULATED</span>' : '<span class="badge no">' + (r.provenance === "placeholder" ? "PLACEHOLDER" : "UNVERIFIED") + "</span>";
+      const sign = (n) => (n > 0 ? "+" : "") + n;
+      const rows = r.days.map((d) => "<tr><td>" + esc(d.label) + "</td><td>" + money(d.baseline.wasteUsd) + "</td><td>" + money(d.withAgent.wasteUsd) + "</td><td>" + money(d.baseline.revenueUsd) + "</td><td>" + money(d.withAgent.revenueUsd) + "</td><td>" + d.baseline.marginPct + "%</td><td>" + d.withAgent.marginPct + "%</td></tr>").join("");
+      $("replay").innerHTML =
+        "<h2>Same simulated week, same customers: without vs with the agent " + prov + "</h2>" +
+        "<div class='empty'>" + esc(r.policy || "") + "</div>" +
+        "<div class='big'>" +
+          "<div><div class='v' style='color:var(--good)'>−" + r.wasteReductionPct + "%</div><div class='l'>ingredient waste (" + money(b.wasteUsd) + " → " + money(a.wasteUsd) + ")</div></div>" +
+          "<div><div class='v'>" + (a.revenueUsd - b.revenueUsd >= 0 ? "+" : "−") + money(Math.abs(a.revenueUsd - b.revenueUsd)) + "</div><div class='l'>revenue (" + money(b.revenueUsd) + " → " + money(a.revenueUsd) + ")</div></div>" +
+          "<div><div class='v'>" + sign(r.marginDeltaPts) + " pts</div><div class='l'>tracked-ingredient gross margin (" + b.marginPct + "% → " + a.marginPct + "%)</div></div>" +
+        "</div>" +
+        "<table><thead><tr><th>Day</th><th>Waste · no agent</th><th>Waste · agent</th><th>Revenue · no agent</th><th>Revenue · agent</th><th>Margin · no agent</th><th>Margin · agent</th></tr></thead><tbody>" + rows +
+        "<tr><td><b>7 days</b></td><td><b>" + money(b.wasteUsd) + "</b></td><td><b>" + money(a.wasteUsd) + "</b></td><td><b>" + money(b.revenueUsd) + "</b></td><td><b>" + money(a.revenueUsd) + "</b></td><td><b>" + b.marginPct + "%</b></td><td><b>" + a.marginPct + "%</b></td></tr></tbody></table>" +
+        "<ul class='assump'>" + (r.assumptions || []).map((s) => "<li>" + esc(s) + "</li>").join("") + "</ul>" +
+        "<p class='empty'>Press V or Esc to close.</p>";
+    } catch (e) { $("replay").innerHTML = "<h2>7-day replay</h2><p class='err'>" + esc(e.message) + "</p>"; }
+  }
+  const hideReplay = () => $("overlay").classList.remove("show");
+  const toggleReplay = () => ($("overlay").classList.contains("show") ? hideReplay() : showReplay());
+
+  // ───────── wiring ─────────
+  $("bScan").onclick = () => scan(false);
+  $("bMock").onclick = () => scan(true);
+  $("bPlay").onclick = togglePlay;
+  $("bReset").onclick = reset;
+  $("bReplay").onclick = toggleReplay;
+  $("overlay").onclick = (e) => { if (e.target.id === "overlay") hideReplay(); };
+  document.addEventListener("keydown", (e) => {
+    if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+    const k = e.key.toLowerCase();
+    if (e.code === "Space") { e.preventDefault(); scan(false); }
+    else if (k === "m") scan(true);
+    else if (k === "p") togglePlay();
+    else if (k === "r") reset();
+    else if (k === "v") toggleReplay();
+    else if (k === "escape") hideReplay();
+  });
+
+  startCamera();
+  api("/api/world/state").then((w) => { for (const s of w.specials || []) knownSpecials.add(s.id); render(w); }).catch((e) => toast("Server unreachable: " + e.message));
+})();
+</script>
+</body>
+</html>

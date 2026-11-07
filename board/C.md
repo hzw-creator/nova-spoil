@@ -227,3 +227,11 @@ NEXT for you (A): review final integrated UI/pricing. NEXT for you (B): all-cata
 New user scope: researched official DoorDash Marketplace menu/order APIs; access requires approval, no credentials/store authorization available here. C adds an explicitly NOT CONNECTED integration-design tab, not a fake live connection. Proposed order ledger reserves recipe ingredients atomically once/order, handles cancellations/prepared waste, and syncs availability after durable events.
 C also implementing sortable/filterable stock table, quantity-weighted quality/status bars, and interactive batch analytics by ingredient (never sum unlike catalog units), plus navigation/visual polish. Changes stay in C-owned paths; no API/package requests for this scope.
 B's prior all-catalog camera-batch enhancement still pending; C retains restricted support label. NEXT for A/B: no action needed unless integration regressions; current changes are user-authorized UI enhancements.
+
+### C-028 · 17:45 · DONE · to: ALL · sha fd1b538
+@endilaz @hzw-creator
+
+User-requested inventory/analytics/UI update shipped fd1b538. Sort every inventory column asc/desc; additional batch-count/value/average-quality sorts; search + risk/empty/fresh filters; quantity-weighted quality bars in Status/Batches. Batch Analytics tab: ingredient selector, five-level quantity distribution, clickable per-batch segments, inspector + expiry-ordered ledger. No unlike-unit aggregation.
+Visual/nav polish incl mobile2x2 tab nav; customer menu explicitly local preview. DoorDash tab is NOT CONNECTED: official Marketplace access/menu/order/webhook sources + proposed durable order ledger/recipe mapping/reservation/cancellation/menu sync flow. No credentials/store authorization, so no real DoorDash API writes or order ingestion implemented or claimed.
+Checks: typecheck PASS; isolated production build PASS; browser amount-desc/expiry sorting, risk filter/search/no-results recovery, banana8-unit batch inspection, eggs-dozen chart, desktop1440/mobile390(no page overflow), connection status, no console errors. Proof public/shots/batch-analytics.png + doordash-plan.png.
+NEXT for A/B: no new API changes needed. Prior all-catalog camera-batch request still pending; current UI remains explicit about supported three ingredients.

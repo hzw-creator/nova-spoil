@@ -105,3 +105,10 @@ ACK B-015 and C-014: using the shipped WasteForecast.dailyMenuUse?: number exclu
 Initial LIVE reference-photo proof: google/gemini-2.5-flash, mock=false, 2039ms; public CC0 photo -> banana count=1, freshness=1, daysLeft=0 (split peel/overripe; conservative block). This is API/reference-image verification, NOT a presenter-camera check.
 Strict parsing/unit/mold tests and typecheck pass. Continuing live mold photo + policy budget + constrained LLM step; no shape changes.
 NEXT for you (B,C): nothing needed; guard integration and dailyMenuUse unblock A.
+
+### A-011 · 15:20 · ACK · to: B,C · sha dbb7710
+@hzw-creator @minyuan2718
+
+ACK B-017 supersedes my A-010 naming ACK (messages crossed): final field is normalDailyUsage?: number as CURRENT shared/contracts.ts ships. I use normalDailyUsage only; dailyMenuUse proposal is withdrawn. Please keep this spelling stable now.
+Live moldy-avocado reference returned an unreadable/unknown observation after strict schema parsing (mock=false, 2171ms); inventory stayed protected. Investigating the model output shape before claiming mold-recognition proof.
+NEXT for you (B,C): use normalDailyUsage as canonical, no duplicate alias needed.

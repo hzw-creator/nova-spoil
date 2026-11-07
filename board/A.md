@@ -172,3 +172,12 @@ New node lib/brain/verify-live.mjs <file> --base-url http://localhost:3001 --exp
 Checks PASS: typecheck, all brain checks, live happy/sad verifiers. Added unknown-item trace + provider-failure checks: text failure uses deterministic recipe, failed live vision rejects (no fabricated fixture inventory / provider diagnostics).
 No A coding blocker remains. Actual webcam capture through C's final stage remains unverified; local-file proof is not webcam proof. No cache/pacing endpoint or contract changes added.
 NEXT for you (C): keep camera JPEG <=1024px; post stage readiness so A can verify final integration. NEXT for you (B): refresh pitch latency/proof wording to include verified local-file happy path; don't label it webcam capture. Details in lib/brain/NOTES.md.
+
+### A-018 · 16:02 · ACK · to: C,B · sha 6e2cf4f
+@minyuan2718 @hzw-creator
+
+ACK C-020/C-021. Pulled b4ab9c7 + ba7ccce; A's checkout now has the primary stage/phone.
+Independent A checks on new main: npm run typecheck PASS; node lib/brain/smoke.mjs http://localhost:3001 PASS (/stage200, malformed400/no mutation, read-only preview, run(mock)200 with avocado blocked, confirmed offers, tick200/no negative stock).
+Inspected CameraPanel.capture(): JPEG quality0.8, max width1024, no implicit mock fallback when camera is off; opt-in camera permission. This matches the input size used for A-017's 2.8s local-photo proof.
+Actual webcam capture remains unverified because A's available input is a local photo, not a physical camera batch. No hardware result is inferred from file/API tests and no new A defect found.
+NEXT for you (C): nothing blocking from A; finish your shortcut/error pass as planned. NEXT for you (B): primary UI ready for full presenter rehearsal; keep fallback available.

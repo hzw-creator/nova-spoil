@@ -11,7 +11,14 @@ import type {
   AgentDecision, Freshness, InventoryLot, Order, Recipe, ScanResult, Special, WorldEvent, WorldEventKind, WorldState,
 } from "@/shared/contracts";
 import { forecastWaste } from "./forecast";
-import { CAMERA_INGREDIENTS, MENU_ORDERS_PER_HOUR, cameraLotId, isOpenAt, specialOrdersPerHour } from "./seed";
+import { CAMERA_INGREDIENTS, MENU_ORDERS_PER_HOUR, cameraLotId, expectedSpecialOrders, isOpenAt } from "./seed";
+
+/** Deterministic per-special offset in [0.35, 0.65] so different specials don't sell in lockstep. */
+function arrivalOffset(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return 0.35 + ((h >>> 0) % 1000) / 1000 * 0.3;
+}
 import { nextId, rand, world } from "./store";
 
 const MAX_ORDERS = 50;
@@ -110,41 +117,65 @@ export function applyScan(scan: ScanResult): WorldState {
 
 // ───────────────────────── decisions ─────────────────────────
 
-/** Server-side re-validation of a proposed special. Returns the reason it is rejected, or null if OK. */
-function rejectSpecial(w: WorldState, d: AgentDecision, s: Special): string | null {
+const MAX_SPECIAL_HOURS = 12;
+
+/** Total ingredient cost of one portion (tracked ingredients only). */
+export function recipeCost(w: WorldState, recipe: Recipe): number {
+  return recipe.ingredients.reduce((sum, l) => sum + (w.ingredients.find((i) => i.id === l.ingredientId)?.unitCost ?? 0) * l.qty, 0);
+}
+
+/**
+ * Server-side re-validation of a proposed special (C-008). Returns a normalized copy with server-derived
+ * originalPrice (menu price), discountPct (from price) and createdAt (server simTime), or the rejection reason.
+ * Client timestamps and list prices are never trusted.
+ */
+function validateSpecial(w: WorldState, d: AgentDecision, s: Special): { ok: Special; reason?: undefined } | { reason: string } {
   const recipe = w.recipes.find((r) => r.id === s.recipeId);
-  if (!recipe) return `recipe "${s.recipeId}" is not in the recipe book`;
-  if (s.heroIngredientId !== d.ingredientId) return "hero ingredient does not match the decision";
-  if (!recipe.ingredients.some((l) => l.ingredientId === s.heroIngredientId)) return `${recipe.name} does not use ${s.heroIngredientId}`;
-  if (!(Number.isFinite(s.price) && s.price > 0 && Number.isFinite(s.originalPrice) && s.price <= s.originalPrice + EPS)) return "invalid price";
-  if (!(s.discountPct >= 0 && s.discountPct <= 60)) return "discount outside 0–60%";
-  if (!(Number.isFinite(s.unitsAvailable) && s.unitsAvailable >= 1)) return "invalid unitsAvailable";
+  if (!recipe) return { reason: `recipe "${s.recipeId}" is not in the recipe book` };
+  if (s.heroIngredientId !== d.ingredientId) return { reason: "hero ingredient does not match the decision" };
+  if (!recipe.ingredients.some((l) => l.ingredientId === s.heroIngredientId)) return { reason: `${recipe.name} does not use ${s.heroIngredientId}` };
+  const originalPrice = recipe.basePrice;
+  const floor = recipeCost(w, recipe) * 1.5;
+  if (!(Number.isFinite(s.price) && s.price > 0 && s.price <= originalPrice + EPS)) return { reason: `price $${s.price} not within (0, menu price $${originalPrice}]` };
+  if (s.price < floor - EPS) return { reason: `price $${s.price} below 1.5× ingredient cost ($${floor.toFixed(2)})` };
+  const discountPct = Math.max(0, Math.round((1 - s.price / originalPrice) * 100));
+  if (discountPct > 60) return { reason: "discount above 60% cap" };
+  if (!(Number.isFinite(s.unitsAvailable) && s.unitsAvailable >= 1)) return { reason: "invalid unitsAvailable" };
+  const nowMs = new Date(w.simTime).getTime();
   const exp = new Date(s.expiresAt).getTime();
-  if (!(Number.isFinite(exp) && exp > new Date(w.simTime).getTime())) return "invalid or past expiresAt";
-  return null;
+  if (!(Number.isFinite(exp) && exp > nowMs && exp <= nowMs + MAX_SPECIAL_HOURS * 3_600_000))
+    return { reason: `expiresAt must be within the next ${MAX_SPECIAL_HOURS} sim hours` };
+  return { ok: { ...s, originalPrice, discountPct, createdAt: w.simTime } };
 }
 
 export function applyDecisions(decisions: AgentDecision[]): WorldState {
-  const w = world();
+  return refreshMetrics(applyDecisionsTo(world(), decisions));
+}
+
+/** Same as applyDecisions but on an explicit state (used by the replay on its own cloned world). */
+export function applyDecisionsTo(w: WorldState, decisions: AgentDecision[]): WorldState {
   for (const d of decisions) {
     const ing = w.ingredients.find((i) => i.id === d.ingredientId);
     const name = ing?.name ?? d.ingredientId;
     switch (d.action) {
       case "CREATE_SPECIAL": {
-        if (!d.special || d.safety?.blocked) break;
-        const reason = rejectSpecial(w, d, d.special);
-        const recipe = w.recipes.find((r) => r.id === d.special!.recipeId);
+        const proposed = d.special;
+        if (!proposed || d.safety?.blocked) break;
+        const v = validateSpecial(w, d, proposed);
+        const recipe = w.recipes.find((r) => r.id === proposed.recipeId);
         const cap = recipe ? portionsAvailable(w, recipe) : 0;
-        const units = Math.min(Math.max(0, Math.floor(d.special.unitsAvailable)), cap);
-        if (reason || units < 1) {
-          console.warn(`[world] special not published (${d.special.name}): ${reason ?? "not enough sellable stock for every recipe ingredient"}`);
+        if (v.reason !== undefined || cap < 1) {
+          // visible to presenters: the returned world is publication truth (C-008)
+          logEvent(w, "special_expired", `❌ ${proposed.name} NOT published — ${v.reason ?? "not enough sellable stock for every recipe ingredient"}`);
           break;
         }
+        const sp = v.ok;
+        const units = Math.min(Math.floor(sp.unitsAvailable), cap);
         // one live special per hero ingredient
         w.specials = w.specials.filter((s) => !(s.heroIngredientId === d.ingredientId && s.status === "live"));
-        w.specials.unshift({ ...d.special, status: "live", unitsSold: 0, unitsAvailable: units });
-        const capped = units < d.special.unitsAvailable ? ` · capped to ${units} by stock` : "";
-        logEvent(w, "special_published", `${d.special.emoji} ${d.special.name} live at $${d.special.price.toFixed(2)} (−${d.special.discountPct}%)${capped}`);
+        w.specials.unshift({ ...sp, status: "live", unitsSold: 0, unitsAvailable: units });
+        const capped = units < sp.unitsAvailable ? ` · capped to ${units} by stock` : "";
+        logEvent(w, "special_published", `${sp.emoji} ${sp.name} live at $${sp.price.toFixed(2)} (−${sp.discountPct}%)${capped}`);
         break;
       }
       case "DISCARD": {
@@ -165,7 +196,7 @@ export function applyDecisions(decisions: AgentDecision[]): WorldState {
         break;
     }
   }
-  return refreshMetrics(w);
+  return w;
 }
 
 // ───────────────────────── clock ─────────────────────────
@@ -221,8 +252,13 @@ export function tick(minutes: number): WorldState {
       }
       const recipe = w.recipes.find((r) => r.id === s.recipeId);
       if (!recipe || !open) continue;
-      const minutesLive = (now.getTime() - new Date(s.createdAt).getTime()) / 60_000;
-      const n = Math.min(poisson(specialOrdersPerHour(s.discountPct, minutesLive) / 60), s.unitsAvailable - s.unitsSold);
+      const created = new Date(s.createdAt).getTime();
+      const minutesLive = Number.isFinite(created) ? (now.getTime() - created) / 60_000 : Infinity;
+      // Demo pacing: special orders arrive at the EXPECTED rate (k-th order when expected orders cross k − offset),
+      // not a Poisson draw, so the live demo doesn't hinge on one lucky random number. The 7-day replay uses
+      // random arrivals instead. Disclosed in pitch/NUMBERS.md.
+      const due = Math.floor(expectedSpecialOrders(s.discountPct, 0, minutesLive) + arrivalOffset(s.id));
+      const n = Math.max(0, Math.min(due - s.unitsSold, s.unitsAvailable - s.unitsSold));
       for (let k = 0; k < n; k++) {
         const used = makeOne(w, recipe);
         if (!used) {

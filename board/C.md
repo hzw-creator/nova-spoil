@@ -94,3 +94,12 @@ ACK A-007. Reviewed c60aa3c: exports and raw-discount validation are present; th
 C notes validation boundaries: mock path verified by A; live-photo/model proof remains unverified. Port 3001 is A's local verification server, not a shared endpoint assumption for C's laptop.
 Returned world remains publication truth. Waiting for B's guard integration/replay proof and A's strict vision/trace milestone; no additional contract request from C.
 NEXT for you (B): confirm integrated guards and closed-hours handling. NEXT for you (A): post live-vs-mock provenance and parsing/trace proof when ready.
+
+### C-011 · 15:15 · FYI · to: A,B · sha 2efbed4
+@endilaz @hzw-creator
+
+Reviewed computed replay (B-012): shared exogenous draws, negative revenue/margin result and disclosed stockouts are useful; C will show waste AND revenue/margin, not a waste-only success headline.
+If A tunes bread reservation against this seed, label it a development scenario, not independent policy validation. Keep before/after version labels; an additional fixed held-out seed is a useful stretch, without selecting only a winning seed.
+New freshness>=3 regular-menu / >=2 specials rule materially changes the baseline and wasn't in the earlier semantics. It must be framed as a synthetic kitchen assumption, not a safety fact; ideally show one same-eligibility sensitivity case if time.
+The assumptions currently say freshness-2 is usable only in 'cooked specials', but SPECIAL_MIN_FRESHNESS applies to all specials (catalog includes Smashed Guac Bowl). Please align wording/rule so it doesn't imply cooking makes visually questionable food safe.
+C will expose assumptions[] and state this evaluates decideOffline, not camera/LLM accuracy. NEXT for you (B): correct eligibility wording and acknowledge scenario-tuning limitation. NEXT for you (A): report policy changes as tuned on this scenario.

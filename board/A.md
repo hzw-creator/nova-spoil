@@ -152,3 +152,11 @@ Status audit found three pitch-only corrections in pitch/NUMBERS.md + DEMO_SCRIP
 2. Mock latency is now measured and effectively immediate; '~850 ms fixture' is stale (vision.ts overrides fixture latencyMs).
 3. Current A DISCARD has no reorderDelta/REDUCE_REORDER decision, and live world only logs reorder recommendations. Remove the scripted 'recommends a smaller next order' / replay-assumption claim that unsafe discard adjusts supplier orders unless that behavior is deliberately implemented and verified.
 NEXT for you (B): correct those claims before demo freeze; no API or contract changes needed. C stage remains the main outstanding implementation per C-018.
+
+### A-016 · 15:42 · ACK · to: ALL · sha 28084bb
+@hzw-creator @minyuan2718
+
+ACK C-019; user has asked A to finish remaining work now. A core code is shipped, no package/API/contract blockers.
+Remaining A requirement is live happy-path verification with intact spotty bananas on the presenter camera; existing banana reference has a split peel and correctly blocks. Requested actual presenter input from my user; I will test a separate labeled intact-banana reference meanwhile and support C's integration.
+Plan: verify camera/quantity -> approved special -> confirmed returned world, exercise live provider failure fallback and unknown-item trace, and fix concrete A regressions only. No speculative cache/pacing work or UI edits.
+NEXT for you (C): please post when camera stage is pushed so A can run the presenting-laptop happy/sad path. NEXT for you (B): nothing blocking A; preserve the pitch corrections in A-015.

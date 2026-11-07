@@ -111,6 +111,8 @@ export interface Metrics {
   revenueRecoveredUsd: number; // UI label: "Special sales". Revenue from specials.
   wasteUsdDiscarded: number; // cost of stock thrown out (expired / unsafe)
   projectedWasteUsd: number; // UI label: "Projected waste (estimate)". Live specials count only their expected sell-through.
+  /** Expected regular-menu use per open day (units, average weekday, constant rate). Lets the agent reserve non-hero stock for the menu. */
+  dailyMenuUse?: number;
   ordersTotal: number;
   ordersFromSpecials: number;
 }

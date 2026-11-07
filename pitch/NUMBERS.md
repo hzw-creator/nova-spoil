@@ -32,10 +32,10 @@ _Provenance: **computed** · policy: decideOffline v0 (07:00 + 14:00 daily) vs n
 - Evaluates the deterministic offline policy only, not camera or LLM accuracy. The agent cannot change supplier orders here (it only adjusts them after an unsafe-item discard, which this replay has none of).
 - Agent run: 9 specials published, 23 special orders (Strawberry Shortcake 5 sold / 2×, Warm Banana Bread 2 sold / 2×, Bananas Foster French Toast 14 sold / 4×, Spinach Shakshuka 2 sold / 1×).
 - Sensitivity, without the quality-≥3 kitchen assumption (menu may use quality-2 stock): waste $11.71 → $0, margin 80.9% → 80.2%.
-- Held-out scenario (seed 77031, fixed before any policy tuning): waste $40.48 → $7.88, revenue $5071 → $5101.78, margin 79.9% → 80%. Headline numbers use the development seed 20261107; any policy tuning was done against it.
+- Secondary scenario (seed 77031, fixed before tuning; results visible to policy developers, so not a held-out test): waste $40.48 → $7.88, revenue $5071 → $5101.78, margin 79.9% → 80%. Headline numbers use the development seed 20261107; any policy tuning was done against it.
 - Sanity check: agent with zero special demand matches baseline (waste $30.73 vs $30.73). Replay computed in 185 ms.
 
-**How to say it (honest version):** "In our simulated week, the agent cut ingredient waste by about half on our development scenario, and by 80% on a held-out scenario we fixed before tuning. On the development scenario it also cost some regular-menu sales, because the specials used up bread the menu needed, and we're showing you that too."
+**How to say it (honest version):** "In our simulated week, the agent cut ingredient waste by about half on our development scenario, and by about 80% on a second scenario we fixed before tuning (its revenue and margin were roughly flat). On the development scenario it also cost some regular-menu sales, because the specials used up bread the menu needed, and we're showing you that too."
 Don't say "saves X% for restaurants". Say "in our simulation".
 
 ## 2. Live demo run (mock scan, deterministic after Reset)
@@ -59,7 +59,7 @@ Freshness numbers are **visual quality estimates** from a vision model, not food
 weekly waste $ avoided per restaurant  =  Σ_ingredients (at-risk units/week × unit cost × share repurposed)
 platform impact / week                 =  that  ×  N_restaurants_using_it
 ```
-From our simulation, the per-restaurant figure is **$17.79/week of tracked-ingredient waste avoided** on the development scenario ($30.73 → $12.94) and **$32.60/week** on the held-out one. These are for 7 tracked ingredients at one small café. Use `N` as a placeholder, never a made-up count.
+From our simulation, the per-restaurant figure is **$17.79/week of tracked-ingredient waste avoided** on the development scenario ($30.73 → $12.94) and **$32.60/week** on the secondary one. These are for 7 tracked ingredients at one small café. Use `N` as a placeholder, never a made-up count.
 
 ## 5. Limitations to say before judges ask
 - Synthetic demand and inventory; 7 days; one café.

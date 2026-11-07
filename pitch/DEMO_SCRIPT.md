@@ -13,7 +13,7 @@
 | 0:35 | Phone pings | "And it's live on the app: Warm Banana Bread, today only, $3.99, was $6." |
 | 0:45 | Press **P** | "Ten sim-minutes per second. Nearby customers order it… it sells out… and this counter is the cost of at-risk ingredients that went into a sale instead of the bin." |
 | 1:05 | Hold the moldy avocado, press **Space** | "Now the sad path. Moldy avocado. The agent **refuses**. Anything rated 1 out of 5 is never offered; that's a hard rule in plain code, not a prompt. It's discarded, and the agent recommends a smaller next order." |
-| 1:25 | Replay slide | "Is it worth it? We replayed the same simulated week with and without the agent, same customers both times. Waste dropped by about half, and by 80% on a held-out week we fixed before tuning. We also show the cost: on one scenario, specials used bread the regular menu needed. Simulated, but every number is computed." |
+| 1:25 | Replay slide | "Is it worth it? We replayed the same simulated week with and without the agent, same customers both times. Waste dropped by about half, and by about 80% on a second scenario we fixed before tuning. We also show the cost: on one scenario, specials used bread the regular menu needed. Simulated, but every number is computed." |
 | 1:45 | Close | "Every restaurant on DoorDash has a fridge. Spoil pricing turns what's about to go bad into a sale." |
 
 Before presenting, fill the replay sentence with the latest `pitch/NUMBERS.md` figures (regenerate at freeze: `node pitch/numbers.mjs`).

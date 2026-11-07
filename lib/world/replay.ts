@@ -20,7 +20,7 @@ import { freshWorld, restoreGlobals, snapshotGlobals } from "./store";
 
 const DAYS = 7;
 const SEED = 20261107; // development scenario (policy changes may be tuned against it)
-const HOLDOUT_SEED = 77031; // fixed held-out scenario, chosen before any policy tuning (15:20 ET); never re-picked
+const SECONDARY_SEED = 77031; // fixed before any policy tuning (15:20 ET); results disclosed since, so it is a fixed SECONDARY scenario, not held-out validation
 /** Fixed daily order = this × expected daily usage, rounded up to whole units. Kitchens over-order to avoid stockouts. */
 const ORDER_BUFFER = 1.25;
 /** Share of special orders that are customers who would otherwise have bought a regular menu item. */
@@ -231,7 +231,7 @@ export function runReplay(): ReplayResult {
     const sanity = simulate("decideOffline", streams, 0);
     const noRuleBase = simulate("none", streams, 1, SPECIAL_MIN_FRESHNESS);
     const noRuleAgent = simulate("decideOffline", streams, 1, SPECIAL_MIN_FRESHNESS);
-    const hoStreams = makeStreams(freshWorld(), HOLDOUT_SEED);
+    const hoStreams = makeStreams(freshWorld(), SECONDARY_SEED);
     const hoBase = totals(simulate("none", hoStreams).days);
     const hoAgent = totals(simulate("decideOffline", hoStreams).days);
     const ms = Date.now() - t0;
@@ -262,7 +262,7 @@ export function runReplay(): ReplayResult {
         "Evaluates the deterministic offline policy only, not camera or LLM accuracy. The agent cannot change supplier orders here (it only adjusts them after an unsafe-item discard, which this replay has none of).",
         `Agent run: ${agent.specialsPublished} specials published, ${agent.specialOrders} special orders (${Object.entries(agent.byRecipe).map(([n, v]) => `${n} ${v.sold} sold / ${v.published}×`).join(", ")}).`,
         `Sensitivity, without the quality-≥3 kitchen assumption (menu may use quality-2 stock): waste $${totals(noRuleBase.days).wasteUsd} → $${totals(noRuleAgent.days).wasteUsd}, margin ${totals(noRuleBase.days).marginPct}% → ${totals(noRuleAgent.days).marginPct}%.`,
-        `Held-out scenario (seed ${HOLDOUT_SEED}, fixed before any policy tuning): waste $${hoBase.wasteUsd} → $${hoAgent.wasteUsd}, revenue $${hoBase.revenueUsd} → $${hoAgent.revenueUsd}, margin ${hoBase.marginPct}% → ${hoAgent.marginPct}%. Headline numbers use the development seed ${SEED}; any policy tuning was done against it.`,
+        `Secondary scenario (seed ${SECONDARY_SEED}, fixed before tuning but its results are visible to policy developers, so not a held-out test): waste $${hoBase.wasteUsd} → $${hoAgent.wasteUsd}, revenue $${hoBase.revenueUsd} → $${hoAgent.revenueUsd}, margin ${hoBase.marginPct}% → ${hoAgent.marginPct}%. Headline numbers use the development seed ${SEED}; any policy tuning was done against it.`,
         `Sanity check: agent with zero special demand ${sanityOk ? "matches" : "DOES NOT match"} baseline (waste $${ts.wasteUsd} vs $${tb.wasteUsd}). Replay computed in ${ms} ms.`,
       ],
     };

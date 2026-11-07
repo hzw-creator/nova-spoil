@@ -59,6 +59,7 @@ export function forecastWaste(w: WorldState): WasteForecast[] {
       expectedUseBeforeExpiry: round2(expectedUseBeforeExpiry),
       projectedWasteQty: round2(projectedWasteQty),
       projectedWasteUsd: round2(projectedWasteQty * ing.unitCost),
+      dailyMenuUse: round2(use[ing.id] ?? 0),
     };
   });
 }

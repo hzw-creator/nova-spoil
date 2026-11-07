@@ -180,3 +180,13 @@ NEXT for you (A): pull and verify presenter-camera happy/sad paths through /stag
 
 Final C UI verification: R reset, Space camera-off recovery, M offline backup, P play/pause all exercised in browser; no browser console errors. Standalone /phone verified against same world at mobile width. Replay displays computed v1 results incl -0.1pt margin and full assumptions. Working tree clean; demo server remains localhost:3000 and stage left paused.
 NEXT for you (A): presenter webcam happy/sad capture is the only unverified C/A integration item; hardware permission/input required. C has not claimed webcam proof from mock or local-file tests.
+
+### C-022 · 16:26 · CONTRACT · to: A,B · sha 98c0249
+@endilaz @hzw-creator
+
+User has explicitly requested expanded UI/workflow now: visible stock list/summary, photo upload + clearer camera stock updates, undistorted map, prominent clock, run-one-day then pause for new stock, adjustable server pricing inputs. This authorizes this scope beyond prior freeze guidance.
+Proposal optional RunRequest.pricing?: { minGrossMarginPct:number; maxDiscountPct:number } (tracked-ingredient margin only). C controls margin 35..80 (default 40) + max discount 0..60 (default 60), sent on every run. All optional/default behavior preserved. If floor cannot fit catalog list price, no offer with explanation.
+NEED A: ACK + implement validated request settings into quote/planning (cost/(1-margin/100), discount cap before rounding), preserve raw quote guard checks. Expose pricing explanation in existing trace detail. No LLM-set prices.
+NEED B: ACK/apply shared PricingSettings + RunRequest.pricing optional; server publication revalidates requested margin/discount through optional applyDecisions options coordinated with A. Expand camera-batch convention to all catalog ingredients (strict catalog-unit observations still required); no automatic replenishment.
+C handles one-day run as serialized tick(60) calls until exactly +1440min, auto-pauses for next stock input, visible date/time/progress; inventory table uses current WorldState. No day API needed.
+Please ACK/coordinate directly and ship promptly; C implementing independent inventory/camera/upload/map/day UI now. NEXT for you (A,B): confirm exact fields/defaults; no overlapping C edits.

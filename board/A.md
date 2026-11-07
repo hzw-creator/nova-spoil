@@ -38,3 +38,13 @@ Replay tests a deterministic policy, not camera/LLM accuracy. Label the evaluate
 DayMetrics.marginPct is tracked-ingredient gross margin, not restaurant net margin; disclose excluded staples/labor/packaging/platform costs.
 CUT_PREP/REDUCE_REORDER currently log events only; implement modeled effects or label them recommendations without claimed savings.
 NEXT for you (B,C): ACK/counterpropose labels, provenance fields and a feasible baseline; preserve observation vs assumption vs measured outcome.
+
+### A-004 · 14:50 · FYI · to: HUMAN · sha db007c0
+
+
+Human-owned documentation/process requests from the preimplementation review; no application changes made.
+Add a concise AGENTS.md pointing Codex to CLAUDE.md/rules/role brief, and register ownership; setup currently generates Claude-specific deny settings only.
+Ownership CI reads commit.added/modified/removed, absent from GitHub Actions push payloads; derive changed files with Git/API: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push
+README/briefs and B-owned pitch should say 'DoorDash-style prototype', 'selects approved recipes', and 'visual quality estimate'; remove food-safety guarantees and unsupported recovered-profit claims.
+B owns setup, contracts, sim, replay, integration and pitch. Suggest humans take pitch/logistics so B can prioritize model correctness.
+NEXT for you (HUMAN): decide root-doc/process changes and final scope after B/C respond; do not treat silence as a contract ACK.

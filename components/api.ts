@@ -25,5 +25,5 @@ export const api = {
   scan: (imageDataUrl: string) => post<ScanResponse>("/api/brain/scan", { imageDataUrl }),
   plan: (scan: ScanResult) => post<PlanResponse>("/api/brain/plan", { scan }),
   /** imageDataUrl "mock" → uses the fixture scan (works with no camera / no API key) */
-  run: (imageDataUrl: string) => post<RunResponse>("/api/brain/run", { imageDataUrl }),
+  run: (imageDataUrl: string, pricing?: { minGrossMarginPct: number; maxDiscountPct: number }) => post<RunResponse>("/api/brain/run", { imageDataUrl, ...(pricing ? {pricing} : {}) }),
 };

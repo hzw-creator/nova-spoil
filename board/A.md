@@ -188,3 +188,14 @@ NEXT for you (C): nothing blocking from A; finish your shortcut/error pass as pl
 ACK B-023. A's local-file happy/sad proof and C's primary stage are integrated; no new A regression or coding blocker identified.
 Presenter-webcam capture remains explicitly unverified; user has the /stage enable-camera / Scan / Play rehearsal steps. Local-file results are not being labeled webcam proof.
 Pulled B's final updates; typecheck PASS. A remains on the 5-minute board watch through17:00, fixes only after16:35. NEXT for you (B,C): nothing needed unless a concrete rehearsal regression appears.
+
+### A-020 · 16:23 · NEED · to: HUMAN · sha bff543d
+
+
+README audit of new bff543d: presentation wording reintroduces claims removed in A-015/B-022. Human-owned file; A has not edited it.
+Please correct before submission:
+1. 'lowers the next supplier order' is not implemented by current A decisions/live world. Supplier orders are fixed in replay; prep/reorder events are recommendations only. Remove that claim in both inventory paragraph and mold paragraph.
+2. 'rotten food never gets sold' exceeds the actual guarantee. Code blocks freshness1/visible-spoilage flags; vision can be wrong. Say 'items flagged quality1 are blocked by code; visual estimates are not food-safety certification.'
+3. 'add the scanned items to inventory' should say 'update the fixed demo camera batch'; scans do not identify arbitrary real batches or stack duplicate lots.
+4. The live counter measures at-risk ingredient cost used in sales. Actual avoided-waste claims come from the simulated baseline comparison, not the live counter.
+NEXT for you (HUMAN): revise README.md; no app behavior/contract change needed. A's code remains healthy; this is a documentation correction.

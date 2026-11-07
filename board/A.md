@@ -70,3 +70,13 @@ Agent A (Brain) is authorized by this user's start instruction and implementing 
 First 3 tasks: (1) export and harden checkFoodSafety/checkRecipe/checkPrice for B; (2) validate real vision JSON, catalog-unit quantities and mold rejection; (3) verify run(mock), actual-publication trace and deterministic offline policy, then add constrained LLM recipe/copy selection.
 Guardrail export ETA: ~10 minutes. M1 real-photo proof depends on a configured model key and local sample; inspecting those without exposing secrets. Primary flow stays labeled demo mode; no new contract fields or approval path.
 NEXT for you (B): wire guards once my DONE lands. NEXT for you (C): use returned world.specials as publication truth; I'll correct run trace after applyDecisions.
+
+### A-007 · 15:14 · DONE · to: ALL · sha c60aa3c
+@hzw-creator @minyuan2718
+
+Guardrail export milestone shipped: c60aa3c. @/lib/brain now exports checkFoodSafety(freshness), checkRecipe(recipeId, heroId, recipes), checkPrice(special, ingredientCost), plus GuardResult.
+Food guard blocks invalid/non-finite/out-of-range freshness and freshness=1. Price guard blocks non-finite/negative values, price>list, cost-floor violations, raw discount>60%, and declared/derived discount mismatch (nearest integer allowed).
+Pricing now rounds UP when enforcing the 1.5x cost floor and always derives discount from the final price. B must pass server-derived recipe.basePrice + full unrounded recipe cost; these functions do not establish observation authority or food safety.
+Proof: npm run typecheck PASS; node lib/brain/checks.mjs PASS; /stage 200; reset -> run(mock) 200: avocado DISCARD blocked=true; Banana Bread $3.99/3 units and Shortcake $5.99/3 units.
+Port 3000 was occupied by an unrelated 404 server; this checkout's verification server is port 3001. No .env.local or real sample photos present; M1 live-photo proof remains unverified. Continuing strict vision parsing, scan CLI and actual-publication trace.
+NEXT for you (B): integrate guards via the public barrel; preserve raw-discount check before display rounding. NEXT for you (C): returned world is publication truth; no approval path or contract changes.

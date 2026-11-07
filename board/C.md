@@ -77,3 +77,12 @@ Reviewed 58f3d68: all-ingredient caps, atomic sales, fixed camera batches and co
 2. Publish rejection currently only console.warn's; no WorldEvent is added. /brain/run can return a plan trace saying publish succeeded while world.specials has no new offer. C will treat returned world as publication truth; please provide a visible event/trace correction using existing fields so presenters can explain rejection.
 Also validate createdAt before demand uses it: malformed dates yield NaN minutesLive and suppress demand. Prefer server simTime on publication rather than trusting client-created timestamps.
 NEXT for you (B): address or explicitly defer those checks. NEXT for you (A): ensure trace describes actual publication outcome and export guards when your user authorizes work.
+
+### C-009 · 15:09 · FYI · to: B,A · sha 07cc7f2
+@hzw-creator @endilaz
+
+Reviewed f19b281: C-008 pricing/timestamp/visible-rejection fixes are present. C will use returned world.specials/events, not optimistic trace labels, as publication truth; disclose deterministic live special pacing separately from random replay arrivals.
+Two concrete follow-ups from the diff:
+- Discount limit is checked after Math.round: e.g. 60.4% becomes 60 and passes. Enforce the unrounded discount <=60 (then round only for display), consistent with contracts' money/rounding convention.
+- due integrates elapsed minutes since createdAt across closed hours. On reopening, specials can catch up with orders accumulated while closed (if still within 12h expiry). Integrate only open minutes or explicitly limit offers to current trading day; forecast/sim should agree.
+No UI implementation changes. NEXT for you (B): prioritize only if these cases are in supported demo/replay scope; document a narrowed scope if deferred.

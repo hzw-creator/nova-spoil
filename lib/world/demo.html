@@ -229,10 +229,11 @@
     for (const d of out.plan.decisions || []) if (d.safety && d.safety.blocked) { addShield(d); await sleep(320); }
     // Publication truth = the returned world, not the plan (C-008 / C-017)
     const live = new Set((out.world.specials || []).filter((s) => s.status === "live").map((s) => s.id));
+    const traceConfirms = steps.some((s) => s.kind === "publish"); // A's trace already confirms publication from the returned world
     for (const d of out.plan.decisions || []) {
       if (!d.special || (d.safety && d.safety.blocked)) continue;
       const sp = (out.world.specials || []).find((s) => s.id === d.special.id);
-      if (sp && live.has(sp.id)) addStep("publish", "Live on the app: " + sp.name + " " + money(sp.price) + " (was " + money(sp.originalPrice) + ", −" + sp.discountPct + "%)", sp.unitsAvailable + " available · " + sp.reason);
+      if (sp && live.has(sp.id)) { if (traceConfirms) continue; addStep("publish", "Live on the app: " + sp.name + " " + money(sp.price) + " (was " + money(sp.originalPrice) + ", −" + sp.discountPct + "%)", sp.unitsAvailable + " available · " + sp.reason); }
       else addStep("guardrail", "Not published: " + d.special.name, "Server validation rejected it. See the kitchen log.");
       await sleep(320);
     }
@@ -377,7 +378,12 @@
   });
 
   startCamera();
-  api("/api/world/state").then((w) => { for (const s of w.specials || []) knownSpecials.add(s.id); render(w); }).catch((e) => toast("Server unreachable: " + e.message));
+  const qs = new URLSearchParams(location.search); // test hooks: ?auto=mock runs a mock scan on load, ?replay=1 opens the replay
+  api("/api/world/state").then((w) => {
+    for (const s of w.specials || []) knownSpecials.add(s.id); render(w);
+    if (qs.get("auto") === "mock") scan(true);
+    if (qs.get("replay") === "1") showReplay();
+  }).catch((e) => toast("Server unreachable: " + e.message));
 })();
 </script>
 </body>

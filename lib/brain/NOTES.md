@@ -7,10 +7,12 @@ Primary flow: **one-click demo mode** (`POST /api/brain/run`). Fixed camera-batc
 - Vision/text defaults: `google/gemini-2.5-flash`, configurable via `VISION_MODEL` / `TEXT_MODEL`. Key stays in the existing local `.env` or `.env.local`; never logged or committed.
 - Model id and image input verified against [OpenRouter's endpoint metadata](https://openrouter.ai/api/v1/models/google/gemini-2.5-flash/endpoints), Nov 7, 2026. [Chat API reference](https://openrouter.ai/docs/api/reference/overview).
 - Public CC0 banana reference (`samples/overripe-banana.jpg`): LIVE, mock=false, count=1, freshness=1, daysLeft=0, 2039 ms. The peel is split open, so this is a conservative block example rather than a freshness-2 happy path.
+- Intact-banana CC0 reference (`samples/freckled-ripe-bananas.jpg`): LIVE, scan.mock=false / plan.mock=false, count=2, freshness=2, scan 2041 ms / complete run 3046 ms. Warm Banana Bread $3.99 (was $6), one portion, confirmed publication and sold out after 20 simulated minutes. This is reference-image proof, not a webcam capture.
+- User-supplied local WebP (not copied into Git): LIVE, count=1, freshness=2, daysLeft=1; Warm Banana Bread $3.99 (was $6), one portion, published and sold out after 20 simulated minutes. Original 3620px input: scan 3849 ms / full run 4938 ms. A 1024px JPEG copy in a temporary directory: scan 1821 ms / full run 2825 ms; both scan.mock=false and plan.mock=false. User explicitly approved sending the photo to OpenRouter and local verification. Total world metrics also include independent seeded strawberry sales; do not attribute those totals to the scanned banana alone.
 - Public mold reference (temporary local file, attribution in `samples/README.md`): LIVE, mock=false, avocado count=1, freshness=1, daysLeft=0, confidence=0.98, notes="Visible mold on the avocado.", 1292 ms.
 - End-to-end live mold-reference `/run`: scan 2735 ms, complete response 3696 ms; avocado DISCARD/blocked, no avocado special, live text choice for an independent seeded Strawberry Shortcake, `plan.mock=false`, and publication confirmed in returned state. This verifies mixed blocked/eligible ingredient handling; it does not claim the scanned avocado created that dessert.
 - Initial mold calls returned invalid confidence values and were ignored. Prompt now explicitly requires confidence 0..1, never a percentage. These few references demonstrate provider/parsing behavior, not classifier accuracy.
-- Presenter webcam / locally photographed produce has **not** been verified. No such photo was available during implementation. End-to-end mock mode is deterministic even when a key is present.
+- The local-photo happy path is verified. Actual presenter webcam capture and C's final stage integration remain unverified; a supplied file is not camera proof. End-to-end mock mode is deterministic even when a key is present.
 
 ## Vision and HTTP behavior
 
@@ -44,8 +46,12 @@ node lib/brain/checks.mjs --replay    # additionally print computed replay, incl
 node lib/brain/smoke.mjs http://localhost:3001  # resets synthetic world; /stage + APIs + tick
 node lib/brain/dev-scan.mjs lib/brain/samples/overripe-banana.jpg --base-url http://localhost:3001
 # --run opts into scan + plan + publication; default CLI mode is scan only.
+node lib/brain/verify-live.mjs lib/brain/samples/freckled-ripe-bananas.jpg --base-url http://localhost:3001 --expect-special banana
+# verify-live RESETS the local synthetic world, requires live scan provenance,
+# confirms the exact offer id, then ticks until the expected offer sells out.
+# For a mold reference: --expect-discard avocado instead.
 ```
 
 Verification server uses port 3001 because another local server occupied 3000 and returned 404 for `/stage`. This is a local test convenience, not a contract/default-port change.
 
-Known limits: reference photos only, small sample count, model/keyword false negatives and positives, estimates of hidden food quality are unreliable, ambiguous units require review, average-demand reserve is heuristic, offer caps are not durable reservations, and asynchronous live planning can become stale before B's final validation. No `?slow=1` (not requested by C) or image cache was added.
+Known limits: reference/local-file tests only (no presenter webcam capture), small sample count, model/keyword false negatives and positives, estimates of hidden food quality are unreliable, ambiguous units require review, average-demand reserve is heuristic, offer caps are not durable reservations, and asynchronous live planning can become stale before B's final validation. No `?slow=1` (not requested by C) or image cache was added.

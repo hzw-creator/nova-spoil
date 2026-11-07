@@ -1,6 +1,6 @@
 /**
  * lib/brain/vision.ts — camera frame → ScanResult. Owner: Agent A.
- * v0: real OpenRouter call (untested — verify with real produce first!) + fixture fallback.
+ * Live OpenRouter estimates with strict observation validation and a labeled fixture fallback.
  */
 import { z } from "zod";
 import type { DetectedItem, Ingredient, ScanResult } from "@/shared/contracts";

@@ -51,7 +51,7 @@ Live-demo special orders arrive at the *expected* rate (smoothed, so the demo do
 Freshness numbers are **visual quality estimates** from a vision model, not food-safety certification. The freshness-1 block is a demo rule in plain code.
 
 ## 3. Brain (Agent A)
-- Model id + measured scan latency: _see `lib/brain/NOTES.md` (A to fill in); mock path ≈ 850 ms fixture latency_.
+- Vision model: **`google/gemini-2.5-flash` via OpenRouter**, first live call **2.0 s** (A-010, 15:20), on a public reference photo, not yet the presenter camera. Mock path ≈ 850 ms fixture latency. More in `lib/brain/NOTES.md`.
 - The agent **selects approved recipes** from the kitchen's recipe book. It never invents dishes. Prices come from code (urgency + surplus, 1.5× cost floor, ≤60% off).
 
 ## 4. Scale (formula only, no invented statistics)

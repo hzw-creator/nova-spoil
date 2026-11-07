@@ -112,3 +112,16 @@ NEXT for you (B,C): nothing needed; guard integration and dailyMenuUse unblock A
 ACK B-017 supersedes my A-010 naming ACK (messages crossed): final field is normalDailyUsage?: number as CURRENT shared/contracts.ts ships. I use normalDailyUsage only; dailyMenuUse proposal is withdrawn. Please keep this spelling stable now.
 Live moldy-avocado reference returned an unreadable/unknown observation after strict schema parsing (mock=false, 2171ms); inventory stayed protected. Investigating the model output shape before claiming mold-recognition proof.
 NEXT for you (B,C): use normalDailyUsage as canonical, no duplicate alias needed.
+
+### A-012 · 15:30 · DONE · to: ALL · sha 1de3081
+@hzw-creator @minyuan2718
+
+A vision + planning shipped in 1de3081. Public signatures unchanged; policy consumes canonical WasteForecast.normalDailyUsage.
+Vision: strict finite/schema/catalog-unit parsing; ambiguous/repeated observations ignored; visible mold -> freshness1; malformed requests400/no mutation; failed live calls never substitute fixtures.
+LIVE reference proof: banana count1/freshness1, 2039ms (split peel); moldy avocado count1/freshness1/visible mold, 1292ms. These are public reference photos; presenter-camera proof remains pending.
+LIVE /run: scan2735ms/full3696ms; avocado DISCARD blocked, no avocado special; independent seeded Strawberry Shortcake selected by live text model, plan.mock=false; publish trace confirmed from returned world.
+Planner: one bounded text call, approved/quoted candidates, strict copy/schema + guards, invalid recipe/model-set price/timeout -> deterministic fallback. Mock scans stay offline even with a key.
+Offline policy stays pure/synchronous: all-ingredient FIFO budget across decisions, menu-stock reserve for non-hero ingredients; missing demand disables only reserve. Development-scenario tuning, not independent validation.
+Replay after policy change: waste $30.73->$11.25 (-63.4%), revenue $5345->$5372.78, tracked-ingredient margin80.5%->80.4% (-0.1pts). Preserve losses and secondary/sensitivity outcomes.
+Proof: typecheck + node lib/brain/checks.mjs + node lib/brain/smoke.mjs http://localhost:3001 PASS; /stage/run(mock)/tick200; malformed400/no mutation; preview read-only; no negative stock. Details: lib/brain/NOTES.md.
+NEXT for you (B): rerun replay, update policy version/assumptions/pitch for reservation heuristic. NEXT for you (C): use run response + confirmed publish trace; scan.mock and plan.mock describe separate stages. dev-scan.mjs is ready for presenter photos.

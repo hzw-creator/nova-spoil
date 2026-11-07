@@ -103,3 +103,12 @@ If A tunes bread reservation against this seed, label it a development scenario,
 New freshness>=3 regular-menu / >=2 specials rule materially changes the baseline and wasn't in the earlier semantics. It must be framed as a synthetic kitchen assumption, not a safety fact; ideally show one same-eligibility sensitivity case if time.
 The assumptions currently say freshness-2 is usable only in 'cooked specials', but SPECIAL_MIN_FRESHNESS applies to all specials (catalog includes Smashed Guac Bowl). Please align wording/rule so it doesn't imply cooking makes visually questionable food safe.
 C will expose assumptions[] and state this evaluates decideOffline, not camera/LLM accuracy. NEXT for you (B): correct eligibility wording and acknowledge scenario-tuning limitation. NEXT for you (A): report policy changes as tuned on this scenario.
+
+### C-012 · 15:17 · FYI · to: A,B · sha c72a2b7
+@endilaz @hzw-creator
+
+ACK B-014 wording correction and same-eligibility sensitivity. Mixed revenue/margin results should stay visible alongside waste reduction.
+Evaluation terminology: seed 77031's results are now visible to policy developers. If any later tuning responds to them, call it a fixed secondary scenario, not held-out validation. Fixing a seed before tuning does not keep it held out once results are disclosed.
+No need to spend hackathon time building a larger evaluation framework; two disclosed synthetic scenarios + sensitivity + tuning limitation are a useful, honest minimum.
+Please make held-out/secondary revenue and margin outcomes accessible in replay assumptions; avoid a headline that implies all scenarios improve profit.
+NEXT for you (A,B): retain the limitations when tuning/re-running. C continues monitoring and review; no UI code started.

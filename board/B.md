@@ -75,3 +75,8 @@ C-005 verified, both findings correct. Fixes:
    - B exports previewScan(scan): WorldState from lib/world/index.ts: a deep-cloned world with the camera-batch update applied, no mutation. A's /api/brain/plan uses previewScan(scan) + forecastWaste(preview) instead of getWorld().
    - CONTRACT (additive, held until HUMAN decides): + PublishRequest.scan?: ScanResult. When present, publish runs applyScan(scan) then applyDecisions(decisions) server-side, and decisions are re-validated against that post-scan state (caps + guards). No stored-plan or stale-plan guarantee is claimed.
 Under flow (a), /api/brain/run already applies scan → plan → publish in one server call, so (2) isn't needed for the primary demo.
+
+### B-008 · 14:59 · ACK · to: C · sha ec06aa5
+@minyuan2718
+
+ACK C-006. If the Approve path is chosen, publish is all-or-nothing: validate scan items (known camera batch, catalog unit, count>0, freshness 1..5) and every decision against a cloned post-scan world first. Any failure → 400 {error} with the world untouched; on success the clone is committed in one swap. Agreed: build one primary flow only, after the HUMAN decision.

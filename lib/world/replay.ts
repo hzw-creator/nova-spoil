@@ -19,7 +19,8 @@ import { MENU_MIN_FRESHNESS, SPECIAL_MIN_FRESHNESS, applyDecisionsTo, makeOne } 
 import { freshWorld, restoreGlobals, snapshotGlobals } from "./store";
 
 const DAYS = 7;
-const SEED = 20261107;
+const SEED = 20261107; // development scenario (policy changes may be tuned against it)
+const HOLDOUT_SEED = 77031; // fixed held-out scenario, chosen before any policy tuning (15:20 ET); never re-picked
 /** Fixed daily order = this × expected daily usage, rounded up to whole units. Kitchens over-order to avoid stockouts. */
 const ORDER_BUFFER = 1.25;
 /** Share of special orders that are customers who would otherwise have bought a regular menu item. */
@@ -104,7 +105,7 @@ interface RunOut {
   lostMenuSales: number;
 }
 
-function simulate(policy: Policy, streams: Streams, specialDemandScale = 1): RunOut {
+function simulate(policy: Policy, streams: Streams, specialDemandScale = 1, menuMinFresh = MENU_MIN_FRESHNESS): RunOut {
   const w = freshWorld();
   w.events = [];
   const nMenu = w.menu.length;
@@ -186,7 +187,7 @@ function simulate(policy: Policy, streams: Streams, specialDemandScale = 1): Run
         const recipe = recipeOf.get(item.recipeId);
         for (let n = streams.menu[t * nMenu + j]; n > 0; n--) {
           if (suppressMenu > 0) { suppressMenu--; continue; }
-          const used = recipe ? makeOne(w, recipe, MENU_MIN_FRESHNESS) : null;
+          const used = recipe ? makeOne(w, recipe, menuMinFresh) : null;
           if (!used) { lostMenuSales++; continue; }
           today.revenueUsd += item.price;
           today.foodCostUsd += costOf(item.recipeId);
@@ -228,6 +229,11 @@ export function runReplay(): ReplayResult {
     const base = simulate("none", streams);
     const agent = simulate("decideOffline", streams);
     const sanity = simulate("decideOffline", streams, 0);
+    const noRuleBase = simulate("none", streams, 1, SPECIAL_MIN_FRESHNESS);
+    const noRuleAgent = simulate("decideOffline", streams, 1, SPECIAL_MIN_FRESHNESS);
+    const hoStreams = makeStreams(freshWorld(), HOLDOUT_SEED);
+    const hoBase = totals(simulate("none", hoStreams).days);
+    const hoAgent = totals(simulate("decideOffline", hoStreams).days);
     const ms = Date.now() - t0;
 
     const tb = totals(base.days);
@@ -249,12 +255,14 @@ export function runReplay(): ReplayResult {
         "SIMULATED: synthetic café (7 tracked ingredients, 5 menu dishes), not real restaurant data.",
         `Same pre-generated customer stream for both runs (seed ${SEED}); Poisson menu orders, ${OPEN_HOUR}:00–${CLOSE_HOUR}:00 daily, weekday demand ×${Math.min(...WEEKDAY_DEMAND)}–×${Math.max(...WEEKDAY_DEMAND)} (busy weekends), no time-of-day curve.`,
         `Fixed daily supplier order = ${ORDER_BUFFER}× average expected usage (whole units), every morning; produce arrives with ${DELIVERY_LIFE_MIN * 100}–100% of shelf life left; first day starts from seeded stock.`,
-        `Kitchen rule: regular dishes only use freshness ≥ 3; overripe (freshness 2) stock is usable only in cooked specials, otherwise it spoils. Freshness drifts down as shelf life runs out.`,
+        `Synthetic kitchen assumption (not a food-safety rule): regular dishes use visual-quality ≥ 3 stock; quality-2 (overripe) stock is used only in repurposing specials (e.g. banana bread), otherwise it spoils. Quality drifts down as shelf life runs out.`,
         `Special demand: ${specialOrdersPerHour(0)}–${specialOrdersPerHour(60).toFixed(2)} orders/hr base (weak price response), ×3 launch burst decaying over ~40 min; random arrivals here (the live demo uses smoothed arrivals).`,
         `${Math.round(CANNIBALIZATION * 100)}% of special orders replace a regular menu order (cannibalization). Specials draw from shared stock, so they can cause menu stockouts (lost menu sales: baseline ${base.lostMenuSales}, agent ${agent.lostMenuSales}).`,
         "Margin = tracked-ingredient gross margin only: excludes pantry staples, labor, packaging, rent and platform fees.",
         "Evaluates the deterministic offline policy only, not camera or LLM accuracy. The agent cannot change supplier orders here (it only adjusts them after an unsafe-item discard, which this replay has none of).",
         `Agent run: ${agent.specialsPublished} specials published, ${agent.specialOrders} special orders (${Object.entries(agent.byRecipe).map(([n, v]) => `${n} ${v.sold} sold / ${v.published}×`).join(", ")}).`,
+        `Sensitivity, without the quality-≥3 kitchen assumption (menu may use quality-2 stock): waste $${totals(noRuleBase.days).wasteUsd} → $${totals(noRuleAgent.days).wasteUsd}, margin ${totals(noRuleBase.days).marginPct}% → ${totals(noRuleAgent.days).marginPct}%.`,
+        `Held-out scenario (seed ${HOLDOUT_SEED}, fixed before any policy tuning): waste $${hoBase.wasteUsd} → $${hoAgent.wasteUsd}, revenue $${hoBase.revenueUsd} → $${hoAgent.revenueUsd}, margin ${hoBase.marginPct}% → ${hoAgent.marginPct}%. Headline numbers use the development seed ${SEED}; any policy tuning was done against it.`,
         `Sanity check: agent with zero special demand ${sanityOk ? "matches" : "DOES NOT match"} baseline (waste $${ts.wasteUsd} vs $${tb.wasteUsd}). Replay computed in ${ms} ms.`,
       ],
     };

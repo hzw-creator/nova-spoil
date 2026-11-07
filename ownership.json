@@ -1,0 +1,60 @@
+{
+  "_comment": "Single source of truth for who may write where. Read by scripts/check-ownership.mjs (pre-commit hook + CI) and scripts/setup-agent.sh (Claude Code deny rules). A path ending in / is a folder prefix; otherwise an exact file. HUMAN = only humans edit (agents must ask on the board).",
+  "agents": {
+    "A": {
+      "name": "Brain",
+      "github": "hzw-creator",
+      "paths": [
+        "lib/brain/",
+        "app/api/brain/",
+        "board/A.md"
+      ]
+    },
+    "B": {
+      "name": "World",
+      "github": "endilaz",
+      "paths": [
+        "lib/world/",
+        "app/api/world/",
+        "shared/",
+        "pitch/",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "next.config.mjs",
+        "postcss.config.mjs",
+        ".env.example",
+        ".gitignore",
+        "board/B.md"
+      ]
+    },
+    "C": {
+      "name": "UI",
+      "github": "minyuan2718",
+      "paths": [
+        "app/stage/",
+        "app/phone/",
+        "app/page.tsx",
+        "app/layout.tsx",
+        "app/globals.css",
+        "components/",
+        "public/",
+        "board/C.md"
+      ]
+    }
+  },
+  "human": [
+    "CLAUDE.md",
+    "README.md",
+    "RULES.md",
+    "COMMS.md",
+    "ownership.json",
+    "agents/",
+    "scripts/",
+    ".githooks/",
+    ".github/",
+    ".claude/",
+    "board/HUMAN.md",
+    "board/README.md"
+  ]
+}

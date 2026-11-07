@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Appends "Agent: X" (or "Human: yes") trailer so CI knows who made each commit.
+MSG_FILE="$1"
+GIT_DIR="$(git rev-parse --git-dir)"
+if [ "${NOVA_HUMAN:-0}" = "1" ]; then
+  TRAILER="Human: yes"
+elif [ -f "$GIT_DIR/nova-agent" ]; then
+  TRAILER="Agent: $(tr -d '[:space:]' < "$GIT_DIR/nova-agent")"
+else
+  exit 0
+fi
+grep -q "^${TRAILER%%:*}:" "$MSG_FILE" || printf '\n%s\n' "$TRAILER" >> "$MSG_FILE"

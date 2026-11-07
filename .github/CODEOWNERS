@@ -1,0 +1,16 @@
+# Mirrors ownership.json (informational; review-enforced only if you turn on branch protection).
+/lib/brain/            @hzw-creator
+/app/api/brain/        @hzw-creator
+/lib/world/            @endilaz
+/app/api/world/        @endilaz
+/shared/               @endilaz
+/pitch/                @endilaz
+/package.json          @endilaz
+/package-lock.json     @endilaz
+/app/stage/            @minyuan2718
+/app/phone/            @minyuan2718
+/app/page.tsx          @minyuan2718
+/app/layout.tsx        @minyuan2718
+/app/globals.css       @minyuan2718
+/components/           @minyuan2718
+/public/               @minyuan2718

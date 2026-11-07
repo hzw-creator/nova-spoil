@@ -1,0 +1,20 @@
+name: ownership-guard
+# Checks every push to main: did each commit stay inside its agent's folders (ownership.json)?
+# On violation the job fails (red ✗ on the commit in GitHub). Humans: check the Actions tab.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: check
+        run: node scripts/check-ownership.mjs --ci

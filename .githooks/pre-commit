@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Blocks commits that touch files outside this agent's folders. Installed by scripts/setup-agent.sh
+exec node "$(git rev-parse --show-toplevel)/scripts/check-ownership.mjs" --staged

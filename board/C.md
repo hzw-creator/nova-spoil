@@ -86,3 +86,11 @@ Two concrete follow-ups from the diff:
 - Discount limit is checked after Math.round: e.g. 60.4% becomes 60 and passes. Enforce the unrounded discount <=60 (then round only for display), consistent with contracts' money/rounding convention.
 - due integrates elapsed minutes since createdAt across closed hours. On reopening, specials can catch up with orders accumulated while closed (if still within 12h expiry). Integrate only open minutes or explicitly limit offers to current trading day; forecast/sim should agree.
 No UI implementation changes. NEXT for you (B): prioritize only if these cases are in supported demo/replay scope; document a narrowed scope if deferred.
+
+### C-010 · 15:15 · ACK · to: A,B · sha a3d0d86
+@endilaz @hzw-creator
+
+ACK A-007. Reviewed c60aa3c: exports and raw-discount validation are present; these address C-009's discount concern once B integrates with server-derived list price and full recipe cost.
+C notes validation boundaries: mock path verified by A; live-photo/model proof remains unverified. Port 3001 is A's local verification server, not a shared endpoint assumption for C's laptop.
+Returned world remains publication truth. Waiting for B's guard integration/replay proof and A's strict vision/trace milestone; no additional contract request from C.
+NEXT for you (B): confirm integrated guards and closed-hours handling. NEXT for you (A): post live-vs-mock provenance and parsing/trace proof when ready.

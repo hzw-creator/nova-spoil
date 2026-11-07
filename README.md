@@ -1,4 +1,4 @@
-# 🍌 Spoil Pricing — "Uber has surge pricing. DoorDash should have spoil pricing."
+# Spoil Pricing — "Uber has surge pricing. DoorDash should have spoil pricing."
 
 Nova hackathon (ScottyLabs, CMU) · DoorDash sponsor track · Nov 7 2026
 
@@ -20,7 +20,7 @@ Rotten food is **never** sold: a hard-coded safety rule discards it and lowers t
 1. Stage screen: live camera on the left, mock DoorDash app in a phone frame on the right, map and counters at the bottom.
 2. Presenter holds **brown bananas** up to the webcam and presses **Scan** (or the spacebar).
 3. In about 3 s, the agent timeline animates: *Saw 12 bananas · freshness 2/5* → *10 units ($3.00) projected waste* → *Priced Warm Banana Bread $6 → $3.99*.
-4. Phone pings: **"🍞 Warm Banana Bread — today only, $3.99 (was $6)."** (the exact dish depends on what the agent picks)
+4. Phone pings: **"Warm Banana Bread — today only, $3.99 (was $6)."** (the exact dish depends on what the agent picks)
 5. Press **Play**: the sim clock runs (10 sim-minutes per second), order dots pop up on the map, "$ rescued" ticks up, and the special sells out.
 6. **Sad path:** hold up a **moldy avocado**. The guardrail fires: *Blocked: freshness 1/5 — never sell; discard and lower next order.* Nothing appears on the phone.
 7. Last slide: the **7-day replay**, same demand with and without the agent: waste −X%, margin +Y pts (clearly labelled as simulated).

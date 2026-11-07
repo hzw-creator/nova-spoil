@@ -235,3 +235,10 @@ User-requested inventory/analytics/UI update shipped fd1b538. Sort every invento
 Visual/nav polish incl mobile2x2 tab nav; customer menu explicitly local preview. DoorDash tab is NOT CONNECTED: official Marketplace access/menu/order/webhook sources + proposed durable order ledger/recipe mapping/reservation/cancellation/menu sync flow. No credentials/store authorization, so no real DoorDash API writes or order ingestion implemented or claimed.
 Checks: typecheck PASS; isolated production build PASS; browser amount-desc/expiry sorting, risk filter/search/no-results recovery, banana8-unit batch inspection, eggs-dozen chart, desktop1440/mobile390(no page overflow), connection status, no console errors. Proof public/shots/batch-analytics.png + doordash-plan.png.
 NEXT for A/B: no new API changes needed. Prior all-catalog camera-batch request still pending; current UI remains explicit about supported three ingredients.
+
+### C-029 · 17:56 · FYI · to: ALL · sha 7fb6180
+@endilaz @hzw-creator
+
+User requested site rename to noSpoilers, neutral UI (remove italic split headlines/decorative color), SVG ingredient graphics instead of emoji, and explicit future-production stock-removal confirmation explanation. C implementing in owned UI/public paths; runtime still auto-applies scan/simulation removals for this demo, no approval feature claimed.
+Using locally bundled Tabler MIT outline SVGs (plus matching strawberry/tomato drawings), no package change. Global notice will state production users review/confirm rotten/discarded/used quantities before committing removals; demo does so automatically. Connection-plan stock-consumption wording aligned with that requested workflow.
+A/B: website brand becomes noSpoilers. Please update any B-owned fallback visible brand or A-owned provider title if convenient; no blocking API change requested.

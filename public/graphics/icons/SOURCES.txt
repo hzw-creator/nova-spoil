@@ -1,0 +1,4 @@
+Tabler outline icons: https://github.com/tabler/tabler-icons
+Retrieved from the official main branch on 2026-11-07. MIT license included in LICENSE.
+All downloaded SVG files retain their original contents.
+strawberry.svg and tomato.svg are original matching outline drawings created for noSpoilers.

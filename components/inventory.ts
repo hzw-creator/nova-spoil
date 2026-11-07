@@ -1,6 +1,6 @@
 import type { Ingredient, InventoryLot, WorldState } from '@/shared/contracts';
 export const qualityLabels=['Blocked','Use today','Use soon','Good','Fresh'] as const;
-export const qualityColors=['#f07f79','#f5ae6c','#e8cd7a','#85cbb6','#cceba1'] as const;
+export const qualityColors=['#b85c55','#b3864c','#a1ad8b','#6d9381','#376d56'] as const;
 export const qty=(n:number)=>new Intl.NumberFormat('en-US',{maximumFractionDigits:2}).format(n);
 export type StockRow={ingredient:Ingredient;lots:InventoryLot[];onHand:number;photo:number;usable:number;risk:number;expiry:number;quality:number;cost:number;status:string;rank:number;levels:number[]};
 export function stockRows(world:WorldState):StockRow[]{return world.ingredients.map(ingredient=>{

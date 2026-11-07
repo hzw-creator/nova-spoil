@@ -1,5 +1,6 @@
 "use client";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Icon } from './Icon';
 import type { ScanResult } from '@/shared/contracts';
 export type CameraHandle = { capture:()=>string; clear:()=>void; fixture:()=>void; pickPhoto:()=>void };
 export const CameraPanel = forwardRef<CameraHandle, {scan?:ScanResult; busy:boolean; onPhoto?:(data:string)=>void; onCapture?:()=>void}>(function CameraPanel({scan,busy,onPhoto,onCapture}, ref) {
@@ -17,7 +18,7 @@ export const CameraPanel = forwardRef<CameraHandle, {scan?:ScanResult; busy:bool
  return <section className="panel camera-panel"><div className="panel-heading"><span><i className="live-dot"/> KITCHEN VISION</span><small>{scan ? scan.mock?'FIXTURE SCAN':'LIVE ESTIMATE':ready?'CAMERA READY':'CAMERA OFF'}</small></div><div ref={host} className={`camera-view ${busy?'scanning':''}`}>
  <video ref={video} muted playsInline className={frame?'hidden-video':''}/>
  {frame&&frame!=='mock'&&<img className="captured" src={frame} alt="Captured kitchen camera frame"/>}
- {((!ready&&!frame)||frame==='mock')&&<div className="camera-placeholder"><div className="produce">🍌 <span>🥑</span></div><span className="viewfinder"/><h3>{frame==='mock'?'The demo kitchen':'A little ripe. A lot of potential.'}</h3><p>{frame==='mock'?'Fixture observations · no photo analyzed':'Point your camera at a kitchen batch.'}</p>{!ready&&<button className="camera-enable" onClick={start} disabled={starting||busy}>{starting?'Connecting…':'Enable camera'}</button>}</div>}
+ {((!ready&&!frame)||frame==='mock')&&<div className="camera-placeholder"><div className="capture-placeholder-icon"><Icon name="camera" size={40}/></div><span className="viewfinder"/><h3>{frame==='mock'?'Sample stock':'Add a stock photo'}</h3><p>{frame==='mock'?'Fixture observations · no photo analyzed':'Point your camera at a kitchen batch.'}</p>{!ready&&<button className="camera-enable" onClick={start} disabled={starting||busy}>{starting?'Connecting…':'Enable camera'}</button>}</div>}
  {frame&&frame!=='mock'&&scan&&!scan.mock&&scan.items.map((item,i)=>item.box&&<div key={i} className={`detection ${item.freshness===1?'danger':''}`} style={{left:(size.w-contentW)/2+item.box.x*contentW,top:(size.h-contentH)/2+item.box.y*contentH,width:item.box.w*contentW,height:item.box.h*contentH}}><span>{item.label} · {item.freshness}/5</span></div>)}
  {busy&&<><div className="scan-line"/><div className="scan-badge">Analyzing visual quality…</div></>}
  <div className="camera-corner tl"/><div className="camera-corner br"/></div>

@@ -3,8 +3,9 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Spoil Pricing — Nova 2026",
-  description: "Sell it before it spoils.",
+  title: "noSpoilers",
+  description: "Inventory tracking and spoilage-aware menu pricing.",
+  icons: { icon: "/graphics/icons/plant.svg" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

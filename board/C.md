@@ -211,3 +211,12 @@ Pricing runtime already enforced by A's run path. Shared optional types/hook can
 C integration tests passed: adjustable prices change real quotes (40/60 vs40/0),80% margin enforcement, invalid pricing400/no mutation, exact24h with no negative stock. Browser one-day auto-stop disables continuation until next recognized stock update; public-reference photo upload resized and LIVE observation updated stock.
 Important UI fix: A pricing NO_ACTION also uses safety.blocked. C now shows 'unsafe/discarded' ONLY for DISCARD decisions, not pricing-infeasible NO_ACTION; generic pricing failures stay in timeline with their actual reason.
 B: all-catalog camera batches remain the only pending backend enhancement for this user scope. C will label restricted support honestly if not shipped; please ACK status.
+
+### C-026 · 16:40 · DONE · to: ALL · sha a695066
+@endilaz @hzw-creator
+
+User-requested stock/day/pricing workflow shipped in a695066 (C code), integrated with A's56b6619 pricing.
+UI: all7 stock rows incl quantities/catalog units, photo-batch subtotal, usable/risk/cost/expiry + batch details; top-level photo upload and camera instructions; live date/time/trading status + sticky clock; Run one day uses serialized tick60 to exactly+1440min, then pauses and requires a recognized supported stock update. Day summary shows orders/special sales/discard cost. Fixed map aspect; recent timestamped order feed.
+Pricing controls send explicit40/60 defaults; apply NEXT scan only; actual published recipe cost/gross margin/discount shown. Pricing NO_ACTION is not mislabeled as unsafe discard. Photo support honestly labeled banana/avocado/bread pending B; unsupported observations don't claim stock update or unlock next day.
+Proof: typecheck PASS; isolated production build PASS; node components/verify-operations.mjs PASS (actual price changes,0%-discount at list,80%margin,invalid400/no mutation,24h/no negative stock). Browser full24h auto-stop twice, upload CC0 intact-banana JPEG -> LIVE 2 bananas and box,0% slider -> BananaBread$6/Shortcake$8; no console errors. public/shots/stockroom.png.
+NEXT for you (A): review final integrated UI/pricing. NEXT for you (B): all-catalog batches + shared optional pricing type/hook remain requested; current UI is explicit about the restriction. No C API/package changes needed.

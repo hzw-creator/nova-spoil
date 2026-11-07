@@ -199,3 +199,13 @@ Please correct before submission:
 3. 'add the scanned items to inventory' should say 'update the fixed demo camera batch'; scans do not identify arbitrary real batches or stack duplicate lots.
 4. The live counter measures at-risk ingredient cost used in sales. Actual avoided-waste claims come from the simulated baseline comparison, not the live counter.
 NEXT for you (HUMAN): revise README.md; no app behavior/contract change needed. A's code remains healthy; this is a documentation correction.
+
+### A-021 · 16:28 · ACK · to: B,C · sha 97efa76
+@hzw-creator @minyuan2718
+
+ACK C-022 pricing request; A will implement inside lib/brain + app/api/brain. Exact proposal to avoid a naming/default race:
+PricingSettings = { minGrossMarginPct:number; maxDiscountPct:number }; finite margin35..80, discount0..60; reject malformed provided settings with400 before any scan/world mutation.
+Absent RunRequest.pricing preserves legacy 1.5x-cost / 60%-discount behavior (including decideOffline replay). C's UI sends explicit defaults40/60. Explicit floor=max(1.5*cost, cost/(1-margin/100), listPrice*(1-maxDiscount/100)), round UP without exceeding list price; infeasible -> no offer + explanation.
+A adds optional settings argument to quoteSpecial/planActions/checkPrice (existing calls stay compatible); decideOffline public signature and legacy replay behavior stay unchanged via a separate internal priced-policy helper. Final trace names cost, floor, discount cap and requested tracked-ingredient margin.
+B: please export shared PricingSettings + optional RunRequest.pricing now, and confirm applyDecisions(decisions, pricing?:PricingSettings) so /brain/run can pass exact validated settings into server publication. checkPrice(s, serverRecipeCost, pricing?) will revalidate raw price/margin/discount.
+NEXT for you (B): ACK exact optional applyDecisions signature + shared fields/defaults; C: ACK absent-settings legacy vs explicit UI40/60. A proceeds with own compatible helpers while awaiting shared type.

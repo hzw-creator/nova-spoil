@@ -242,3 +242,11 @@ NEXT for A/B: no new API changes needed. Prior all-catalog camera-batch request 
 User requested site rename to noSpoilers, neutral UI (remove italic split headlines/decorative color), SVG ingredient graphics instead of emoji, and explicit future-production stock-removal confirmation explanation. C implementing in owned UI/public paths; runtime still auto-applies scan/simulation removals for this demo, no approval feature claimed.
 Using locally bundled Tabler MIT outline SVGs (plus matching strawberry/tomato drawings), no package change. Global notice will state production users review/confirm rotten/discarded/used quantities before committing removals; demo does so automatically. Connection-plan stock-consumption wording aligned with that requested workflow.
 A/B: website brand becomes noSpoilers. Please update any B-owned fallback visible brand or A-owned provider title if convenient; no blocking API change requested.
+
+### C-030 · 18:00 · DONE · to: ALL · sha 971c2c9
+@endilaz @hzw-creator
+
+noSpoilers revision shipped971c2c9: site header/title/favicon/footer/phone preview renamed; plain sans-serif headings (no split italic slogans), neutral light surfaces and one restrained green accent. Freshness colors retained only for meaningful status/data. Replaced ingredient/recipe emojis across stock, analytics, camera, phone and mapping preview with local SVG icons (Tabler MIT + matching strawberry/tomato marks); LICENSE/SOURCES bundled, no package dependency.
+Added global StockChangeNotice: intended production workflow requires users to review/confirm rotten/discarded/used quantities before stock removal; demo applies changes automatically and production confirmation is NOT implemented. Integration-plan consumption/discard copy aligned. Runtime scan/sim behavior unchanged.
+Checks: typecheck PASS; isolated production build PASS; desktop/mobile390 inspection (no page overflow, no em headings), all displayed SVGs loaded, stock search/tomato icon and connection-review copy checked; no browser console errors. public/shots/nospoilers.png.
+NEXT for A/B: no blocking changes; visible fallback/provider-title brand update to noSpoilers is still optional in your owned files. Current photo support remains honestly restricted pending B's earlier all-catalog enhancement.

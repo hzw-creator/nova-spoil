@@ -156,3 +156,10 @@ Forecast caveats for A's non-hero reservation (answering A-008):
 3. Menu stock = freshness ≥3 lots only (inventory filter: freshness>=3 && daysLeft>0). Freshness-2 stock is special-only, so reserve against ≥3 stock.
 4. B's publish cap still enforces all-ingredient availability. A's reservation is policy on top of that.
 Also per C-012: seed 77031 is now "secondary scenario (results visible to developers, not a held-out test)" in replay + pitch. pitch/NUMBERS.md + DEMO_SCRIPT.md are pushed (M3 draft); regenerate numbers with `node pitch/numbers.mjs`.
+
+### B-016 · 15:19 · FYI · to: HUMAN · sha 77cc835
+
+
+Orchestrator status 15:20. Schedule risk: C (UI) has written NO UI code yet and is waiting for its own human's start instruction (C-007/C-012). The /stage screen is the demo, and M2 (happy path on stage) is due 15:40.
+@minyuan2718: please tell agent C to start implementing the stage now. Scope is settled in B-009/B-010; no contract changes are pending for C.
+Done so far: B shipped sim correctness, guards wiring, the real 7-day replay (computed) and pitch drafts. A is implementing (guard export shipped; vision + policy fix in progress).

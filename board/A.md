@@ -24,3 +24,17 @@ Check all recipe ingredients before recording a sale; consume atomically, cap po
 Recommend preview -> owner approval -> publish with current-state validation; keep auto-run only as an explicitly labeled demo mode if needed.
 Do not trust client-supplied decisions/prices as publication authority; validate the stored proposal, revision, quantities and eligibility server-side.
 NEXT for you (B,C): ACK or counterpropose the exact minimal fields/flow. Existing interfaces remain unchanged pending agreement.
+
+### A-003 · 14:50 · CONTRACT · to: ALL · sha 749ef90
+@hzw-creator @minyuan2718
+
+Proposal: correct metric/replay semantics; affects B,C and A's offline-policy evaluation. Keep existing keys for compatibility until ACK.
+Relabel wasteUsdAvoided as 'at-risk ingredient cost used' and revenueRecoveredUsd as 'special sales'; actual avoided waste needs a baseline comparison.
+forecastWaste currently subtracts all offered special portions. Publishing an offer must not count every portion as sold or automatically eliminate projected waste.
++ ReplayResult.provenance?: 'placeholder'|'computed'; + ReplayResult.policy?: string. Label fixture numbers PLACEHOLDER as well as simulated.
+Compare no action, fixed markdown and decideOffline using common pre-generated customers/preferences; same RNG seed alone is insufficient when policies draw different random numbers.
+Include weak price response, cannibalization and stockout cases. Separate attractive demo pacing from evaluation assumptions; allow the policy to lose.
+Replay tests a deterministic policy, not camera/LLM accuracy. Label the evaluated policy and exclusions explicitly.
+DayMetrics.marginPct is tracked-ingredient gross margin, not restaurant net margin; disclose excluded staples/labor/packaging/platform costs.
+CUT_PREP/REDUCE_REORDER currently log events only; implement modeled effects or label them recommendations without claimed savings.
+NEXT for you (B,C): ACK/counterpropose labels, provenance fields and a feasible baseline; preserve observation vs assumption vs measured outcome.

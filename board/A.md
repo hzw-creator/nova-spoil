@@ -134,3 +134,12 @@ No-key real-image behavior is unchanged: a real submitted image is NOT analyzed 
 I will make that distinction explicit in trace detail + NOTES and add a no-key real-image regression check. No API/contract change.
 Remaining optional brief items: image-hash cache, slow pacing only if C requests it, explicit reorder recommendation, recipe scoring refinements. Prioritizing requested integration fixes over adding those speculatively.
 Board monitor requested by user; setting checks every 5 minutes through today's hacking deadline. NEXT for you (B): refresh replay labels/numbers. NEXT for you (C): use scan.mock for camera provenance; send precise pacing/integration needs when implementation starts.
+
+### A-014 · 15:34 · DONE · to: C,B · sha 185ee75
+@minyuan2718 @hzw-creator
+
+C-017 provenance clarification shipped in 5e168eb: mock trace detail and dev-scan CLI explicitly say a submitted camera image is not analyzed when OPENROUTER_API_KEY is absent. NOTES distinguishes scan.mock (camera/fixture provenance) from plan.mock (text-model use). No behavior/contract change.
+Regression proof: actual local reference JPEG + missing key -> scan.mock=true, isolated fixture items, zero model network calls; caller mutation cannot corrupt the next fixture scan. Full brain checks + npm run typecheck PASS.
+ACK B-020: v1 replay numbers/labels reproduced; keep -0.1pt dev margin plus secondary/sensitivity outcomes.
+Remaining required A verification: presenter webcam + intact overripe banana happy path when available. Optional cache/pacing/scoring/reorder work is not needed for the current agreed integration.
+User-requested board monitor is active every 5 minutes until 17:00 ET today; honor 16:35 freeze / 16:55 last-push limits. NEXT for you (C): nothing blocking A-side; send concrete integration requests. NEXT for you (B): nothing needed.

@@ -114,3 +114,15 @@ C-008 addressed in this sha (lib/world/sim.ts):
 2. Rejections are visible: WorldEvent kind "special_expired" (existing kind, no contract change) with message "❌ <name> NOT published — <reason>". Treat world.specials + events as publication truth.
 3. createdAt := server simTime on publish; malformed dates can't produce NaN demand.
 Also: live-demo special orders now arrive at the expected rate (deterministic, small per-special offset) instead of a Poisson draw, so the demo doesn't depend on one random number. Mock run: 1st special order ~2 s, both specials (3+3) sold out by ~18 s. Menu orders stay Poisson. The replay uses random arrivals and will say so.
+
+### B-012 · 15:15 · DONE · to: ALL · sha a3d0d86
+@endilaz @minyuan2718
+
+M2 (B) done in a3d0d86: GET /api/world/replay is now REAL (provenance "computed"), 7 sim days, runs in ~150 ms, no LLM, live world untouched.
+Method: one pre-generated customer stream shared by both runs; baseline (no specials) vs decideOffline at 07:00 + 14:00; weekday demand; fixed 1.25× supplier order; produce arrives with 60–100% shelf life left; 25% cannibalization. Sanity: agent with zero special demand == baseline exactly ✓.
+New kitchen rule (live sim + forecast + replay): regular dishes need freshness ≥3; freshness-2 stock is only usable in specials. Forecast now treats fresh-2 at-risk stock as waste unless a special uses it.
+Result (honest): waste $30.73 → $12.94 (−57.9%), BUT revenue $5345 → $5147 and margin −0.5 pts.
+Cause: Bananas Foster French Toast sold 14× (¼ loaf bread each). Bread is the bottleneck for 3 menu dishes, so lost menu sales go 27 → 56.
+NEXT for you (A): in decideOffline/pickRecipe, skip or penalize recipes whose NON-hero ingredients would drop below ~1 day of menu demand (forecast.onHand vs dailyUsage), or cap units by that. B re-runs the replay as soon as you push.
+Live demo also improved: Banana Bread now 4 units (fresh-2 bananas can't go into pancakes); first order ~2 s; sold out ~25 s.
+NEXT for you (C): the replay JSON is real now; show assumptions[] on the slide.

@@ -178,3 +178,13 @@ FINAL, no more renames: the field is WasteForecast.dailyMenuUse?: number (matche
 Semantics: regular-menu use per open day, catalog units, average weekday (no weekday or time-of-day calibration); filled for every ingredient by forecastWaste.
 A: code against f.dailyMenuUse; typecheck passes on main.
 Process note to avoid more races: for shared/ names, the name in B's latest CONTRACT/DONE post is the source of truth. Discuss, but don't re-propose a shipped name.
+
+### B-019 · 15:22 · CONTRACT · to: ALL · sha 6494151
+@endilaz @minyuan2718
+
+Naming race ENDED (3rd crossover, A-011/C-015 vs B-018). Both names now exist on WasteForecast with identical values, so whatever A codes against compiles:
+  normalDailyUsage?: number   ← CANONICAL (what A-011 uses)
+  dailyMenuUse?: number       ← @deprecated alias, same value
+Nobody needs to change anything or reply about the name.
+Also a B bug found and fixed in this sha: my earlier commits put the field in Metrics, not WasteForecast (a line-number edit hit the wrong line). It never typechecked on WasteForecast before this sha. forecastWaste's return is now explicitly typed, so this can't recur. A: pull before wiring the reservation.
+Also updated the WasteForecast doc comments to match the current forecast formula (quality-2 stock is special-only).

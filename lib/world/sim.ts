@@ -11,7 +11,8 @@ import type {
   AgentDecision, Freshness, InventoryLot, Order, Recipe, ScanResult, Special, WorldEvent, WorldEventKind, WorldState,
 } from "@/shared/contracts";
 import { forecastWaste } from "./forecast";
-import { CAMERA_INGREDIENTS, MENU_ORDERS_PER_HOUR, cameraLotId, expectedSpecialOrders, isOpenAt } from "./seed";
+import { checkFoodSafety, checkPrice, checkRecipe } from "@/lib/brain";
+import { CAMERA_INGREDIENTS, CLOSE_HOUR, MENU_ORDERS_PER_HOUR, cameraLotId, expectedSpecialOrders, isOpenAt } from "./seed";
 
 /** Deterministic per-special offset in [0.35, 0.65] so different specials don't sell in lockstep. */
 function arrivalOffset(id: string): number {
@@ -138,22 +139,34 @@ export function recipeCost(w: WorldState, recipe: Recipe): number {
  * Client timestamps and list prices are never trusted.
  */
 function validateSpecial(w: WorldState, d: AgentDecision, s: Special): { ok: Special; reason?: undefined } | { reason: string } {
-  const recipe = w.recipes.find((r) => r.id === s.recipeId);
-  if (!recipe) return { reason: `recipe "${s.recipeId}" is not in the recipe book` };
   if (s.heroIngredientId !== d.ingredientId) return { reason: "hero ingredient does not match the decision" };
-  if (!recipe.ingredients.some((l) => l.ingredientId === s.heroIngredientId)) return { reason: `${recipe.name} does not use ${s.heroIngredientId}` };
-  const originalPrice = recipe.basePrice;
-  const floor = recipeCost(w, recipe) * 1.5;
-  if (!(Number.isFinite(s.price) && s.price > 0 && s.price <= originalPrice + EPS)) return { reason: `price $${s.price} not within (0, menu price $${originalPrice}]` };
-  if (s.price < floor - EPS) return { reason: `price $${s.price} below 1.5× ingredient cost ($${floor.toFixed(2)})` };
-  const discountPct = Math.max(0, Math.round((1 - s.price / originalPrice) * 100));
-  if (discountPct > 60) return { reason: "discount above 60% cap" };
+  // A's guards via the public barrel (A-007): recipe exists + uses hero, price/discount/cost-floor sanity.
+  const rg = checkRecipe(s.recipeId, s.heroIngredientId, w.recipes);
+  if (rg.blocked) return { reason: rg.reason };
+  const recipe = w.recipes.find((r) => r.id === s.recipeId)!;
+  const originalPrice = recipe.basePrice; // server-derived list price, never the client's
+  const pg = checkPrice({ price: s.price, originalPrice, discountPct: s.discountPct }, recipeCost(w, recipe)); // unrounded cost
+  if (pg.blocked) return { reason: pg.reason };
+  // Food rule on the hero stock this special would actually use (oldest sellable lot).
+  const heroLot = w.inventory
+    .filter((l) => l.ingredientId === s.heroIngredientId && l.qty > 0 && l.daysLeft > 0 && l.freshness > 1)
+    .sort((a, b) => a.daysLeft - b.daysLeft)[0];
+  if (!heroLot) return { reason: `no sellable ${s.heroIngredientId} stock (freshness 1 is never sold)` };
+  const fg = checkFoodSafety(heroLot.freshness);
+  if (fg.blocked) return { reason: fg.reason };
+  const rawDiscount = (1 - s.price / originalPrice) * 100; // cap checked unrounded (C-009); rounded for display only
+  if (rawDiscount > 60 + EPS) return { reason: "discount above 60% cap" };
   if (!(Number.isFinite(s.unitsAvailable) && s.unitsAvailable >= 1)) return { reason: "invalid unitsAvailable" };
   const nowMs = new Date(w.simTime).getTime();
   const exp = new Date(s.expiresAt).getTime();
   if (!(Number.isFinite(exp) && exp > nowMs && exp <= nowMs + MAX_SPECIAL_HOURS * 3_600_000))
     return { reason: `expiresAt must be within the next ${MAX_SPECIAL_HOURS} sim hours` };
-  return { ok: { ...s, originalPrice, discountPct, createdAt: w.simTime } };
+  // Offers end at today's close, so demand never "catches up" over closed hours (C-009).
+  const close = new Date(w.simTime);
+  close.setUTCHours(CLOSE_HOUR, 0, 0, 0);
+  if (nowMs >= close.getTime()) return { reason: "café is closed for the day" };
+  const expiresAt = new Date(Math.min(exp, close.getTime())).toISOString();
+  return { ok: { ...s, originalPrice, discountPct: Math.max(0, Math.round(rawDiscount)), createdAt: w.simTime, expiresAt } };
 }
 
 export function applyDecisions(decisions: AgentDecision[]): WorldState {

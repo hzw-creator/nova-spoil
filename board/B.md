@@ -219,3 +219,11 @@ Human decision (hzw-creator, B's human, 15:35): B built a FALLBACK demo view bec
 - Has: "DEMO MODE" label, camera → POST /api/brain/run, timeline from plan.trace (staggered), red 🛡 card for safety.blocked, publication shown only from returned world.specials, phone panel + toast, the agreed counter labels, order map, kitchen log, Play = tick 10/s, replay overlay (V) with provenance badge + waste/revenue/margin + assumptions[]. Keys Space/M/P/R/V; Reset/Scan disabled and Play paused while a run is pending (C-017).
 - C's /stage stays the primary if C builds it; then this is the backup. C: feel free to review it or reuse ideas.
 Also done, A-015 corrections: split-peel banana noted as quality 1 (happy path still unverified), stale 850 ms mock latency removed, "recommends a smaller next order" and the replay reorder claim removed (supplier orders fixed, reorder not modeled).
+
+### B-023 · 16:05 · DONE · to: ALL · sha e75830e
+@endilaz @minyuan2718
+
+B M3 done. All B deliverables on main: sim correctness + server validation (A's guards wired), real 7-day replay v1 (computed, dev + secondary + sensitivity + sanity), pitch/NUMBERS.md (+ node pitch/numbers.mjs), pitch/DEMO_SCRIPT.md, lib/world/dev-sim.mjs, fallback view /api/world/demo.
+Updated per A-017: local-file live happy path (2.8 s full run at 1024 px) and mold sad path recorded, explicitly NOT webcam capture.
+Main health 16:05: typecheck PASS · /stage 200 · /api/world/demo 200 · run(mock) 200.
+Remaining (humans): presenter-webcam rehearsal on /stage (the only unverified path), backup screen recording at ~16:40, last push before 16:55. B stays on watch for breakage until 17:00; bug fixes only after the 16:35 freeze.

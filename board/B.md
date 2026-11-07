@@ -126,3 +126,13 @@ Cause: Bananas Foster French Toast sold 14× (¼ loaf bread each). Bread is the 
 NEXT for you (A): in decideOffline/pickRecipe, skip or penalize recipes whose NON-hero ingredients would drop below ~1 day of menu demand (forecast.onHand vs dailyUsage), or cap units by that. B re-runs the replay as soon as you push.
 Live demo also improved: Banana Bread now 4 units (fresh-2 bananas can't go into pancakes); first order ~2 s; sold out ~25 s.
 NEXT for you (C): the replay JSON is real now; show assumptions[] on the slide.
+
+### B-013 · 15:16 · DONE · to: A,C · sha 07191fd
+@endilaz @minyuan2718
+
+Guards integrated (answers A-007 + C-009), lib/world/sim.ts validateSpecial:
+- Calls checkRecipe / checkPrice / checkFoodSafety from @/lib/brain. checkPrice gets server-derived recipe.basePrice + unrounded recipe cost + the proposal's declared discountPct. checkFoodSafety runs on the oldest sellable hero lot the special would use.
+- Discount cap checked on the unrounded value; discountPct rounded for display only.
+- Offers end at today's close (17:00): expiresAt = min(proposed, close); publishing after close is rejected. No demand catch-up over closed hours, and forecast/sim agree.
+Verified: reset → run(mock) passes all guards with A's c60aa3c pricing (Banana Bread 4u $3.99 −34%, Shortcake 3u $5.99 −25%, avocado DISCARD). Replay unchanged (−57.9% waste, −0.5 margin pts).
+Still open for A: the bread-starvation finding in B-012.

@@ -112,3 +112,12 @@ Evaluation terminology: seed 77031's results are now visible to policy developer
 No need to spend hackathon time building a larger evaluation framework; two disclosed synthetic scenarios + sensitivity + tuning limitation are a useful, honest minimum.
 Please make held-out/secondary revenue and margin outcomes accessible in replay assumptions; avoid a headline that implies all scenarios improve profit.
 NEXT for you (A,B): retain the limitations when tuning/re-running. C continues monitoring and review; no UI code started.
+
+### C-013 · 15:18 · FYI · to: A,B · sha ddd201f
+@endilaz @hzw-creator
+
+A-008 review: approved/makeable recipe choice + all-ingredient caps are sound; the proposed daily-demand inference is not sound under current forecast.ts.
+expectedUseBeforeExpiry = min(menuAtRiskQty, dailyUsage * menuMinDays) + specialUse. It is stock-capped, mixes specials, and uses menuMinDays distinct from overall minDaysLeft. Fully fresh non-hero stock has expectedUse=0/minDaysLeft=99, so division reserves nothing exactly where protection may be needed.
+Please don't describe that ratio as one day of menu demand. Small accurate alternative: B adds WasteForecast.normalDailyUsage?: number populated directly from dailyUsage(w); C ACKs this optional field if A/B want it. Missing field should disable/label the reservation heuristic, not silently imply measured demand.
+Also budget non-hero stock across ALL decisions in the same plan; independent per-recipe caps can each promise the same shared bread. Baseline stock reserve should use menu-eligible lots, not unsafe or expired units from onHand.
+Keep this a disclosed policy heuristic, tuned on the dev scenario. NEXT for you (A,B): pick explicit normal-demand input or clearly qualify the approximation; no UI change required.

@@ -1,0 +1,7 @@
+"use client";
+import { useEffect, useState } from 'react';
+import type { Metrics } from '@/shared/contracts';
+import { money } from './PhoneMockup';
+function NumberValue({value,currency=true}:{value:number;currency?:boolean}) {const [shown,setShown]=useState(value);useEffect(()=>{let id=0;const from=shown,start=performance.now();const tick=(now:number)=>{const p=Math.min(1,(now-start)/450);setShown(from+(value-from)*(1-(1-p)**3));if(p<1)id=requestAnimationFrame(tick);};id=requestAnimationFrame(tick);return()=>cancelAnimationFrame(id);/* animate from last displayed value */ // eslint-disable-next-line react-hooks/exhaustive-deps
+},[value]);return <strong>{currency?money(shown):Math.round(shown)}</strong>;}
+export function Counters({metrics}:{metrics?:Metrics}) {return <div className="counters">{[{label:'At-risk ingredient cost used',value:metrics?.wasteUsdAvoided??0,note:'Through special sales',currency:true},{label:'Special sales',value:metrics?.revenueRecoveredUsd??0,note:'Simulated revenue',currency:true},{label:'Orders from specials',value:metrics?.ordersFromSpecials??0,note:'Made for the neighborhood',currency:false},{label:'Projected waste (estimate)',value:metrics?.projectedWasteUsd??0,note:'Expected ingredient cost',currency:true}].map(c=><div className="counter" key={c.label}><span>{c.label}</span><NumberValue value={c.value} currency={c.currency}/><small>{c.note}</small></div>)}</div>;}

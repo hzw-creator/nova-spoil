@@ -9,8 +9,8 @@ import type {
 } from "@/shared/contracts";
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, { ...init, headers: { "Content-Type": "application/json" }, cache: "no-store" });
-  const data = await res.json();
+  const res = await fetch(path, { signal: AbortSignal.timeout(30_000), ...init, headers: { "Content-Type": "application/json" }, cache: "no-store" });
+  const data = await res.json().catch(() => ({ error: `${path} returned an unreadable response (${res.status})` }));
   if (!res.ok) throw new Error(data?.error ?? `${path} failed (${res.status})`);
   return data as T;
 }

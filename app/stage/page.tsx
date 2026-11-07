@@ -1,45 +1,36 @@
 "use client";
-/**
- * /stage — the presentation screen (laptop on the projector). Owner: Agent C.
- * v0 = ugly but working wiring so A and B can test end-to-end. C replaces the layout
- * with the real design (camera panel · agent timeline · phone mockup · map · counters).
- */
-import { useEffect, useState } from "react";
-import type { RunResponse, WorldState } from "@/shared/contracts";
-import { api } from "@/components/api";
-
-export default function Stage() {
-  const [world, setWorld] = useState<WorldState | null>(null);
-  const [run, setRun] = useState<RunResponse | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => { api.state().then(setWorld).catch((e) => setErr(String(e))); }, []);
-  useEffect(() => {
-    if (!playing) return;
-    const id = setInterval(() => api.tick(10).then(setWorld).catch((e) => setErr(String(e))), 1000);
-    return () => clearInterval(id);
-  }, [playing]);
-
-  return (
-    <main className="p-6 space-y-4 font-mono text-sm">
-      <h1 className="text-2xl font-bold">Spoil Pricing — wiring test (Agent C replaces this)</h1>
-      <div className="flex gap-2">
-        <button className="px-3 py-1 bg-zinc-700 rounded" onClick={() => api.reset().then((w) => { setWorld(w); setRun(null); })}>Reset</button>
-        <button className="px-3 py-1 bg-red-600 rounded" onClick={() => api.run("mock").then((r) => { setRun(r); setWorld(r.world); }).catch((e) => setErr(String(e)))}>Run (mock scan)</button>
-        <button className="px-3 py-1 bg-zinc-700 rounded" onClick={() => setPlaying((p) => !p)}>{playing ? "Pause" : "Play"} sim</button>
-      </div>
-      {err && <p className="text-red-400">{err}</p>}
-      {world && (
-        <section>
-          <p>Sim time: {new Date(world.simTime).toUTCString()}</p>
-          <pre>{JSON.stringify(world.metrics, null, 2)}</pre>
-          <p>Live specials: {world.specials.filter((s) => s.status === "live").map((s) => `${s.emoji} ${s.name} $${s.price}`).join(" · ") || "none"}</p>
-          <p>Events:</p>
-          <ul>{world.events.slice(0, 8).map((e) => <li key={e.id}>{e.message}</li>)}</ul>
-        </section>
-      )}
-      {run && <pre className="text-xs opacity-70">{JSON.stringify(run.plan.trace, null, 2)}</pre>}
-    </main>
-  );
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReplayResult, RunResponse, Special, WorldState } from '@/shared/contracts';
+import { api } from '@/components/api';
+import { CameraPanel, type CameraHandle } from '@/components/CameraPanel';
+import { Timeline } from '@/components/Timeline';
+import { PhoneMockup } from '@/components/PhoneMockup';
+import { OrderMap } from '@/components/OrderMap';
+import { Counters } from '@/components/Counters';
+import { ReplayChart } from '@/components/ReplayChart';
+const message=(e:unknown)=>e instanceof Error?e.message:'Something went wrong. Please try again.';
+export default function Stage(){
+ const [world,setWorld]=useState<WorldState|null>(null),[phoneWorld,setPhoneWorld]=useState<WorldState|null>(null),[run,setRun]=useState<RunResponse|null>(null);
+ const [playing,setPlaying]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[visible,setVisible]=useState(0),[notification,setNotification]=useState<Special>();
+ const [view,setView]=useState('live'),[replay,setReplay]=useState<ReplayResult|null>(null),[replayLoading,setReplayLoading]=useState(false);
+ const camera=useRef<CameraHandle>(null),locked=useRef(false),tick=useRef<Promise<void>|null>(null),mounted=useRef(true),generation=useRef(0);
+ useEffect(()=>{mounted.current=true;let active=true;api.state().then(w=>{if(active){setWorld(w);setPhoneWorld(w);}}).catch(e=>{if(active)setError(message(e));});if(new URLSearchParams(location.search).get('view')==='replay')setView('replay');return()=>{active=false;mounted.current=false;generation.current++;};},[]);
+ const loadReplay=useCallback(async()=>{setReplayLoading(true);setError('');try{const r=await api.replay();if(mounted.current)setReplay(r);}catch(e){if(mounted.current)setError(message(e));}finally{if(mounted.current)setReplayLoading(false);}},[]);
+ useEffect(()=>{if(view==='replay'&&!replay)void loadReplay();},[view,replay,loadReplay]);
+ useEffect(()=>{if(!playing||busy||view!=='live')return;const id=setInterval(()=>{if(locked.current||tick.current)return;tick.current=api.tick(10).then(w=>{if(mounted.current){setWorld(w);setPhoneWorld(w);}}).catch(e=>{if(mounted.current){setError(message(e));setPlaying(false);}}).finally(()=>{tick.current=null;});},1000);return()=>clearInterval(id);},[playing,busy,view]);
+ const scan=useCallback(async(mock=false)=>{if(locked.current)return;locked.current=true;setPlaying(false);setBusy(true);setError('');setNotification(undefined);setRun(null);setVisible(0);const seq=++generation.current;
+ try{await tick.current;const image=mock?'mock':camera.current!.capture();if(mock)camera.current?.fixture();const r=await api.run(image);if(!mounted.current||generation.current!==seq)return;const trace=[...r.plan.trace].sort((a,b)=>a.tMs-b.tMs);r.plan.trace=trace;setRun(r);setWorld(r.world);
+ for(let i=1;i<=trace.length;i++){await new Promise(resolve=>setTimeout(resolve,300));if(!mounted.current||generation.current!==seq)return;setVisible(i);}
+ setPhoneWorld(r.world);const ids=new Set(r.plan.decisions.filter(d=>d.action==='CREATE_SPECIAL').map(d=>d.special?.id));setNotification(r.world.specials.find(s=>s.status==='live'&&ids.has(s.id)));
+ }catch(e){if(mounted.current)setError(message(e));}finally{locked.current=false;if(mounted.current)setBusy(false);}},[]);
+ const reset=useCallback(async()=>{if(locked.current)return;locked.current=true;setBusy(true);setPlaying(false);setError('');try{await tick.current;const w=await api.reset();setWorld(w);setPhoneWorld(w);setRun(null);setVisible(0);setNotification(undefined);camera.current?.clear();}catch(e){setError(message(e));}finally{locked.current=false;setBusy(false);}},[]);
+ useEffect(()=>{if(!notification)return;const id=setTimeout(()=>setNotification(undefined),5000);return()=>clearTimeout(id);},[notification]);
+ useEffect(()=>{const handler=(e:KeyboardEvent)=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||e.target instanceof HTMLSelectElement||(e.target instanceof HTMLElement&&e.target.isContentEditable))return;if(e.code==='Space'){if(e.target instanceof HTMLButtonElement||e.target instanceof HTMLAnchorElement)return;e.preventDefault();setView('live');void scan();}else if(e.key.toLowerCase()==='m'){setView('live');void scan(true);}else if(e.key.toLowerCase()==='p'&&!locked.current&&world){setPlaying(p=>!p);}else if(e.key.toLowerCase()==='r')void reset();};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[scan,reset,world]);
+ const clock=world?new Date(world.simTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}):'--:--';
+ const blocked=run?.plan.decisions.filter(d=>d.safety?.blocked||d.action==='DISCARD')??[];
+ return <main className="stage"><header className="stage-header"><a className="brand" href="/stage"><span className="brand-icon">✳</span><div>Spoil Pricing<small>GOOD FOOD DESERVES ANOTHER CHANCE.</small></div></a><div className="stage-mode"><span className="tag">DEMO MODE</span><span>{world?.restaurant.name??'Connecting to café…'} <b>· {clock}</b></span></div><a className="phone-link" href="/phone" target="_blank" rel="noreferrer">Open phone ↗</a></header>
+ <div className="stage-toolbar"><div className="view-tabs"><button aria-pressed={view==='live'} onClick={()=>setView('live')}>Live kitchen</button><button aria-pressed={view==='replay'} onClick={()=>{setPlaying(false);setView('replay');}}>7-day replay</button></div><div className="controls"><button onClick={()=>void reset()} disabled={busy||!world}>Reset <kbd>R</kbd></button><button onClick={()=>{setView('live');void scan(true);}} disabled={busy||!world}>Mock scan <kbd>M</kbd></button><button className="primary" onClick={()=>void scan()} disabled={busy||!world||view!=='live'}>{busy?'Working…':'Scan batch'} <kbd>␣</kbd></button><button className="play-button" onClick={()=>{setView('live');setPlaying(p=>!p);}} disabled={busy||!world}>{playing?'Ⅱ Pause':'▶ Play'} <kbd>P</kbd></button></div></div>
+ {error&&<div role="alert" className="error-banner"><strong>Couldn’t complete that action.</strong> {error}{!world&&<button onClick={()=>{setError('');api.state().then(w=>{setWorld(w);setPhoneWorld(w);}).catch(e=>setError(message(e)));}}>Retry connection</button>}<button onClick={()=>setError('')} aria-label="Dismiss error">×</button></div>}
+ {view==='live'?<><div className="stage-grid"><div className="camera-column"><CameraPanel ref={camera} scan={run?.scan} busy={busy}/>{blocked.length>0&&<div className="safety-card" role="status"><span>◈</span><div><strong>Blocked: unsafe — not sold</strong><p>{blocked.map(d=>world?.ingredients.find(i=>i.id===d.ingredientId)?.name??d.ingredientId).join(', ')} · flagged stock discarded by the demo rule.</p><small>Other eligible ingredients may still become independent specials.</small></div></div>}<OrderMap world={world}/></div><Timeline run={run} visible={visible} busy={busy&&!run}/><aside className="phone-column"><div className="phone-label"><span>THE CUSTOMER’S VIEW</span><i/></div><PhoneMockup world={phoneWorld} notification={notification}/></aside></div><Counters metrics={world?.metrics}/></>:<ReplayChart data={replay} loading={replayLoading} onRetry={()=>void loadReplay()}/>}
+ <footer className="stage-footer"><span>A DoorDash-style prototype · Nova 2026</span><span>Visual estimates · synthetic orders · offline-policy replay</span><span>Sell it before it spoils. ↗</span></footer></main>;
 }

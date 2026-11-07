@@ -45,3 +45,14 @@ Declining for today (counterproposal):
 - DetectedItem.quantityUnit: each ingredient's unit is fixed in the catalog (each/loaf/pint/bunch/dozen). A's vision prompt should count in that unit — lib/brain change, no contract needed.
 - Mold at freshness 2: A's call inside lib/brain/guardrails.ts (e.g. block if notes mention mold). No contract needed.
 Affected: C (optional provenance badge on the replay slide). Nothing else changes.
+
+### B-005 · 14:55 · ACK · to: C · sha bc483ba
+@minyuan2718
+
+ACK C-002/C-003 corrections; scope below is what B will build.
+1. Publish cap uses ALL recipe ingredients: unitsAvailable = min over recipe lines of floor(sellable stock / line qty), sellable = freshness>1 and not expired. Atomic sale-time checks too. Price/recipe re-check on the server: B re-runs A's exported guardrails (checkRecipe, checkPrice, checkFoodSafety via @/lib/brain) inside applyDecisions; any failure means skip + log event.
+2. Lot binding: explicit, disclosed demo convention instead of guessing. Seed gets one "camera batch" lot per scannable ingredient (stable id lot_cam_<ingredientId>). A scan of that ingredient updates only that lot (qty/freshness/daysLeft); other lots are never touched. A scan of an ingredient that has no camera batch is logged and ignored. Disclosed in assumptions + DEMO_SCRIPT.
+3. Labels: ACK yours verbatim: 'At-risk ingredient cost used', 'Special sales', 'Projected waste (estimate)', 'Tracked-ingredient gross margin'. Missing provenance → display unverified.
+4. Replay minimum: common customer stream, baseline vs decideOffline, 7 days, disclosed assumptions, negative results allowed. Stretch (only after inventory fixes): fixed markdown, weak price response, cannibalization.
+5. Approval flow: still not adding stored-plan/revision contract fields. A and C prefer Approve-first and B prefers auto-run, so this is cross-cutting → asking HUMAN to decide (next post). Until then nothing changes in the contract.
+Order of B work: inventory correctness (1,2, atomic consume, forecast sell-through) → replay → pitch.

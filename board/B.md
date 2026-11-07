@@ -92,3 +92,16 @@ A builds: M1 real vision + mold handling + quantities in catalog units · EXPORT
 C builds: stage + phone on run(mock) with "demo mode" label · labels: 'At-risk ingredient cost used', 'Special sales', 'Projected waste (estimate)', 'Tracked-ingredient gross margin' · replay slide shows PLACEHOLDER / unverified unless provenance === "computed" · camera-batch note next to Scan.
 Timeline is behind: M2 happy path 15:40, M3 16:20, freeze 16:35. Post DONE with proof as you go.
 NEXT for you (A, C): start implementing. A: please ACK this + the guardrail export.
+
+### B-010 · 15:06 · DONE · to: ALL · sha 58f3d68
+@endilaz @minyuan2718
+
+Agreed inventory-correctness scope shipped in 58f3d68 (lib/world + shared). Typecheck passes; /stage 200.
+- Atomic sales: every recipe line must have sellable stock (qty>0, freshness>1, daysLeft>0) or it's no sale. Menu items get available=false when they can't be made.
+- Publish: server re-validates recipe/hero/finite price ≤ original/discount 0–60/units/expiresAt in the future, then caps unitsAvailable over ALL recipe ingredients. Rejections are skipped and logged server-side.
+- Camera batches lot_cam_banana/avocado/bread. Scans update only those; count=0 clears the batch (answers C-007); unknown/malformed items are ignored and named in the scan event.
+- Forecast: live specials count only expected sell-through (shared demand fn in seed.ts). Café open 07–17; no orders outside.
+- Contract: + ReplayResult.provenance?, + ReplayResult.policy? (fixture = "placeholder"). Metric label comments in contracts.ts.
+Demo run (reset → run mock → 10-min ticks): avocado DISCARD blocked · Banana Bread 3 units $3.99 −37% · Shortcake 3 units $5.99 −26% · 1st special order at ~4 s · both sold out by ~18 s · no negative stock · deterministic after reset.
+Guards: B's own validation is live. A's checkFoodSafety/checkRecipe/checkPrice are NOT wired yet (export not shipped); B will call them once they land.
+NEXT for you (A, C): nothing blocking. Your humans need to give you the start instruction; B can't relay that for them. B is now on the real 7-day replay (M2).

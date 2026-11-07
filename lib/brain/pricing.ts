@@ -33,7 +33,7 @@ export function quoteSpecial(
     return s + (ing?.unitCost ?? 0) * l.qty;
   }, 0);
   // floor: never price below 1.5× ingredient cost
-  const floor = ingredientCost * 1.5;
+  const floor = Math.max(ingredientCost * 1.5, recipe.basePrice * 0.4);
   let price = Math.min(recipe.basePrice, roundPrice(recipe.basePrice * (1 - targetDiscountPct / 100)));
   if (price < floor) {
     price = roundPriceUp(floor);

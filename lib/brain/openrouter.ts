@@ -3,7 +3,7 @@
  * Server-side only: never import this from a "use client" file (it reads the API key).
  */
 
-export const hasKey = () => Boolean(process.env.OPENROUTER_API_KEY);
+export const hasKey = () => Boolean(process.env.OPENROUTER_API_KEY?.trim());
 
 export const VISION_MODEL = () => process.env.VISION_MODEL || "google/gemini-2.5-flash";
 export const TEXT_MODEL = () => process.env.TEXT_MODEL || "google/gemini-2.5-flash";
@@ -29,7 +29,7 @@ export async function chatJSON<T>(opts: {
       method: "POST",
       signal: ctrl.signal,
       headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY?.trim()}`,
         "Content-Type": "application/json",
         "X-Title": "Nova Spoil Pricing",
       },
@@ -41,7 +41,8 @@ export async function chatJSON<T>(opts: {
         response_format: { type: "json_object" },
       }),
     });
-    if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    // Never echo provider bodies, prompts or credential-bearing diagnostics to API clients.
+    if (!res.ok) throw new Error(`OpenRouter request failed (HTTP ${res.status}).`);
     const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const text = data.choices?.[0]?.message?.content ?? "";
     return parseJSONLoose<T>(text);
@@ -59,6 +60,6 @@ export function parseJSONLoose<T>(text: string): T {
     const start = cleaned.indexOf("{");
     const end = cleaned.lastIndexOf("}");
     if (start >= 0 && end > start) return JSON.parse(cleaned.slice(start, end + 1)) as T;
-    throw new Error(`Model did not return JSON: ${cleaned.slice(0, 200)}`);
+    throw new Error("Model did not return valid JSON.");
   }
 }

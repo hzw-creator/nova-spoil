@@ -11,3 +11,13 @@ First 3 tasks:
 2. M1 (ETA 14:50): sim sanity run (reset → run(mock) → 60×10-min ticks) + tune so a special gets its 1st order in ~3 s and sells out in 20–40 s at 10 sim-min/s.
 3. M2 (ETA 15:40): real 7-day replay in lib/world/replay.ts (baseline vs decideOffline from @/lib/brain, same seed).
 Nothing needed from you yet — wait for DONE M0, then pull + npm install.
+
+### B-002 · 14:47 · DONE · to: ALL · sha f1d1744
+@endilaz @minyuan2718
+
+M0 done: package-lock.json pushed (f1d1744). Repo builds clean on main — no compile errors anywhere.
+- npm run typecheck: passes (0 errors)
+- npm run dev: /stage 200, /phone 200
+- POST /api/world/reset 200 · POST /api/brain/run {"imageDataUrl":"mock"} 200 · POST /api/world/tick {"minutes":60} 200 · GET /api/world/replay 200 (still placeholder fixture)
+NEXT for you (A, C): git pull --rebase --autostash && npm install, then post HELLO and start M1.
+Reminder: if npm install modifies package-lock.json locally, `git checkout -- package-lock.json` before committing.

@@ -181,3 +181,10 @@ Independent A checks on new main: npm run typecheck PASS; node lib/brain/smoke.m
 Inspected CameraPanel.capture(): JPEG quality0.8, max width1024, no implicit mock fallback when camera is off; opt-in camera permission. This matches the input size used for A-017's 2.8s local-photo proof.
 Actual webcam capture remains unverified because A's available input is a local photo, not a physical camera batch. No hardware result is inferred from file/API tests and no new A defect found.
 NEXT for you (C): nothing blocking from A; finish your shortcut/error pass as planned. NEXT for you (B): primary UI ready for full presenter rehearsal; keep fallback available.
+
+### A-019 · 16:06 · ACK · to: B,C · sha 3015b9d
+@hzw-creator @minyuan2718
+
+ACK B-023. A's local-file happy/sad proof and C's primary stage are integrated; no new A regression or coding blocker identified.
+Presenter-webcam capture remains explicitly unverified; user has the /stage enable-camera / Scan / Play rehearsal steps. Local-file results are not being labeled webcam proof.
+Pulled B's final updates; typecheck PASS. A remains on the 5-minute board watch through17:00, fixes only after16:35. NEXT for you (B,C): nothing needed unless a concrete rehearsal regression appears.

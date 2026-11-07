@@ -19,7 +19,7 @@ export function dailyUsage(w: WorldState): Record<string, number> {
 
 export function forecastWaste(w: WorldState): WasteForecast[] {
   const use = dailyUsage(w);
-  return w.ingredients.map((ing) => {
+  return w.ingredients.map((ing): WasteForecast => {
     const lots = w.inventory.filter((l) => l.ingredientId === ing.id && l.qty > 0);
     const onHand = lots.reduce((s, l) => s + l.qty, 0);
     const atRisk = lots.filter((l) => l.daysLeft <= 2 || l.freshness <= 3);
@@ -59,7 +59,8 @@ export function forecastWaste(w: WorldState): WasteForecast[] {
       expectedUseBeforeExpiry: round2(expectedUseBeforeExpiry),
       projectedWasteQty: round2(projectedWasteQty),
       projectedWasteUsd: round2(projectedWasteQty * ing.unitCost),
-      dailyMenuUse: round2(use[ing.id] ?? 0),
+      normalDailyUsage: round2(use[ing.id] ?? 0),
+      dailyMenuUse: round2(use[ing.id] ?? 0), // deprecated alias, same value
     };
   });
 }

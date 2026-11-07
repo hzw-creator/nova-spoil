@@ -111,8 +111,6 @@ export interface Metrics {
   revenueRecoveredUsd: number; // UI label: "Special sales". Revenue from specials.
   wasteUsdDiscarded: number; // cost of stock thrown out (expired / unsafe)
   projectedWasteUsd: number; // UI label: "Projected waste (estimate)". Live specials count only their expected sell-through.
-  /** Expected regular-menu use per open day (units, average weekday, constant rate). Lets the agent reserve non-hero stock for the menu. */
-  dailyMenuUse?: number;
   ordersTotal: number;
   ordersFromSpecials: number;
 }
@@ -154,9 +152,14 @@ export interface WasteForecast {
   onHand: number; // units across all lots
   atRiskQty: number; // units in lots with daysLeft <= 2 or freshness <= 3
   minDaysLeft: number;
-  expectedUseBeforeExpiry: number; // units normal demand will consume in time
-  projectedWasteQty: number; // max(0, atRisk - expectedUse)
+  expectedUseBeforeExpiry: number; // units normal demand + expected special sell-through will consume in time (stock-capped)
+  projectedWasteQty: number; // unsafe + max(0, quality-2 qty + unused quality≥3 at-risk qty − expected special use)
   projectedWasteUsd: number;
+  /** CANONICAL. Expected regular-menu use per open day, catalog units, average weekday (no weekday / time-of-day calibration).
+   *  Lets the agent reserve non-hero stock for the menu. Filled for every ingredient. */
+  normalDailyUsage?: number;
+  /** @deprecated Alias of normalDailyUsage (same value), kept only because of a naming race on the board. */
+  dailyMenuUse?: number;
 }
 
 // ───────────────────────── Brain (owned by A) ─────────────────────────

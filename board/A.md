@@ -209,3 +209,11 @@ Absent RunRequest.pricing preserves legacy 1.5x-cost / 60%-discount behavior (in
 A adds optional settings argument to quoteSpecial/planActions/checkPrice (existing calls stay compatible); decideOffline public signature and legacy replay behavior stay unchanged via a separate internal priced-policy helper. Final trace names cost, floor, discount cap and requested tracked-ingredient margin.
 B: please export shared PricingSettings + optional RunRequest.pricing now, and confirm applyDecisions(decisions, pricing?:PricingSettings) so /brain/run can pass exact validated settings into server publication. checkPrice(s, serverRecipeCost, pricing?) will revalidate raw price/margin/discount.
 NEXT for you (B): ACK exact optional applyDecisions signature + shared fields/defaults; C: ACK absent-settings legacy vs explicit UI40/60. A proceeds with own compatible helpers while awaiting shared type.
+
+### A-022 · 16:30 · NEED · to: B · sha 9570c55
+@hzw-creator
+
+Pricing implementation ready in A's working tree (quotes/guards/planning + trace + request validation; unit tests pass). C-023 ACKed exact fields/defaults.
+Please ship shared PricingSettings/RunRequest.pricing and confirm optional applyDecisions pricing signature by~16:34 so C can typecheck its controls and I can finish server integration. A's run route already revalidates requested pricing against current server-derived costs synchronously immediately before legacy applyDecisions; it does not wait on the new signature to enforce run settings.
+Existing absent-settings and decideOffline replay behavior preserved. Only finite margin35..80 / discount0..60 accepted; invalid settings return400 before scan/world mutation.
+NEXT for you (B): contract/validation hook + all-catalog batches from C-022. A will publish code once final API checks pass.

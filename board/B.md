@@ -188,3 +188,13 @@ Naming race ENDED (3rd crossover, A-011/C-015 vs B-018). Both names now exist on
 Nobody needs to change anything or reply about the name.
 Also a B bug found and fixed in this sha: my earlier commits put the field in Metrics, not WasteForecast (a line-number edit hit the wrong line). It never typechecked on WasteForecast before this sha. forecastWaste's return is now explicitly typed, so this can't recur. A: pull before wiring the reservation.
 Also updated the WasteForecast doc comments to match the current forecast formula (quality-2 stock is special-only).
+
+### B-020 · 15:32 · DONE · to: ALL · sha f5749e0
+@endilaz @minyuan2718
+
+Re-ran everything after A's 1de3081. A-012 numbers reproduced exactly on main:
+- Dev seed: waste $30.73 → $11.25 (−63.4%), revenue $5345 → $5372.78 (+$27.78), margin 80.5% → 80.4% (−0.1 pts), lost menu sales 27 → 31 (v0 was 56).
+- Secondary seed 77031: waste $40.48 → $7.88 (−80.5%), revenue +$110.28, margin 79.9% → 80.1%.
+- Sanity (zero special demand == baseline) ✓ · replay 428 ms · live demo unchanged (Banana Bread 4u, Shortcake 3u, avocado blocked, 1st order ~2 s).
+Updated: ReplayResult.policy = "decideOffline v1 (menu-stock reserve + plan-wide budget)"; assumptions[] keep the v0 loss (−$197.73, −0.5 pts) as tuning history, labeled as a development-scenario heuristic. pitch/NUMBERS.md (regenerated table, A's live latencies) + DEMO_SCRIPT.md replay line updated.
+NEXT for you (C): the replay endpoint is final-shape and real. Show waste, revenue AND margin plus assumptions[]. The stage is now the critical path for M2 (15:40).

@@ -145,3 +145,14 @@ ACK C-011, done in this sha (lib/world/replay.ts assumptions[]):
 - Held-out seed 77031, fixed now (15:20) BEFORE any A policy tuning, reported alongside dev seed 20261107. Headline = dev seed, labeled "policy tuning done against it".
 - Same-eligibility sensitivity (menu may use quality-2): waste $11.71 → $0, margin 80.9% → 80.2%.
 Current numbers: dev waste $30.73 → $12.94 (−57.9%), margin −0.5 pts, revenue −$198 · held-out waste $40.48 → $7.88, revenue +$31, margin +0.1 pts. Runs in ~300 ms.
+
+### B-015 · 15:19 · CONTRACT · to: ALL · sha ac20343
+@endilaz @minyuan2718
+
+Applied (additive, optional; for A-008): + WasteForecast.dailyMenuUse?: number — expected regular-menu use per open day in catalog units (average weekday, constant rate). forecastWaste fills it for every ingredient.
+Forecast caveats for A's non-hero reservation (answering A-008):
+1. Don't infer daily demand from expectedUseBeforeExpiry/minDaysLeft: it's 0 for ingredients with no at-risk lots (bread usually), and it includes special sell-through. Use dailyMenuUse.
+2. dailyMenuUse ignores the weekday multiplier (replay ×0.75 Mon … ×1.35 Sat) and time of day. Reserving ~1 day is reasonable; on weekends menu demand runs ~35% above it.
+3. Menu stock = freshness ≥3 lots only (inventory filter: freshness>=3 && daysLeft>0). Freshness-2 stock is special-only, so reserve against ≥3 stock.
+4. B's publish cap still enforces all-ingredient availability. A's reservation is policy on top of that.
+Also per C-012: seed 77031 is now "secondary scenario (results visible to developers, not a held-out test)" in replay + pitch. pitch/NUMBERS.md + DEMO_SCRIPT.md are pushed (M3 draft); regenerate numbers with `node pitch/numbers.mjs`.

@@ -250,7 +250,7 @@ export function runReplay(): ReplayResult {
       wasteReductionPct: tb.wasteUsd > 0 ? r1(((tb.wasteUsd - ta.wasteUsd) / tb.wasteUsd) * 100) : 0,
       marginDeltaPts: r1(ta.marginPct - tb.marginPct),
       provenance: "computed",
-      policy: "decideOffline v0 (07:00 + 14:00 daily) vs no-action baseline",
+      policy: "decideOffline v1 (A 1de3081: menu-stock reserve + plan-wide stock budget; 07:00 + 14:00 daily) vs no-action baseline",
       assumptions: [
         "SIMULATED: synthetic café (7 tracked ingredients, 5 menu dishes), not real restaurant data.",
         `Same pre-generated customer stream for both runs (seed ${SEED}); Poisson menu orders, ${OPEN_HOUR}:00–${CLOSE_HOUR}:00 daily, weekday demand ×${Math.min(...WEEKDAY_DEMAND)}–×${Math.max(...WEEKDAY_DEMAND)} (busy weekends), no time-of-day curve.`,
@@ -260,6 +260,7 @@ export function runReplay(): ReplayResult {
         `${Math.round(CANNIBALIZATION * 100)}% of special orders replace a regular menu order (cannibalization). Specials draw from shared stock, so they can cause menu stockouts (lost menu sales: baseline ${base.lostMenuSales}, agent ${agent.lostMenuSales}).`,
         "Margin = tracked-ingredient gross margin only: excludes pantry staples, labor, packaging, rent and platform fees.",
         "Evaluates the deterministic offline policy only, not camera or LLM accuracy. The agent cannot change supplier orders here (it only adjusts them after an unsafe-item discard, which this replay has none of).",
+        "Tuning history (dev seed): v0 policy cut waste 57.9% but lost $197.73 revenue and 0.5 margin pts (its specials used bread the menu needed). v1 adds a one-day menu-stock reserve for non-hero ingredients, a development-scenario heuristic, not independently validated.",
         `Agent run: ${agent.specialsPublished} specials published, ${agent.specialOrders} special orders (${Object.entries(agent.byRecipe).map(([n, v]) => `${n} ${v.sold} sold / ${v.published}×`).join(", ")}).`,
         `Sensitivity, without the quality-≥3 kitchen assumption (menu may use quality-2 stock): waste $${totals(noRuleBase.days).wasteUsd} → $${totals(noRuleAgent.days).wasteUsd}, margin ${totals(noRuleBase.days).marginPct}% → ${totals(noRuleAgent.days).marginPct}%.`,
         `Secondary scenario (seed ${SECONDARY_SEED}, fixed before tuning but its results are visible to policy developers, so not a held-out test): waste $${hoBase.wasteUsd} → $${hoAgent.wasteUsd}, revenue $${hoBase.revenueUsd} → $${hoAgent.revenueUsd}, margin ${hoBase.marginPct}% → ${hoAgent.marginPct}%. Headline numbers use the development seed ${SEED}; any policy tuning was done against it.`,

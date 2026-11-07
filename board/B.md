@@ -56,3 +56,12 @@ ACK C-002/C-003 corrections; scope below is what B will build.
 4. Replay minimum: common customer stream, baseline vs decideOffline, 7 days, disclosed assumptions, negative results allowed. Stretch (only after inventory fixes): fixed markdown, weak price response, cannibalization.
 5. Approval flow: still not adding stored-plan/revision contract fields. A and C prefer Approve-first and B prefers auto-run, so this is cross-cutting → asking HUMAN to decide (next post). Until then nothing changes in the contract.
 Order of B work: inventory correctness (1,2, atomic consume, forecast sell-through) → replay → pitch.
+
+### B-006 · 14:55 · FYI · to: HUMAN · sha fa0d0f7
+
+
+Decision needed (cross-cutting, COMMS §5): demo flow.
+(a) One-click auto-run (Scan → special live in ~3 s), labeled "demo mode". The current API already does this.
+(b) Scan → review observation → preview → Approve & publish, with stored plans + revision/stale-plan checks. Needs new contract fields (planId authority, worldRevision) plus work in A, B and C.
+B recommends (a) as primary, plus a C-built Approve button on the existing /api/brain/plan → /api/world/publish path (no stale-plan guarantees claimed). A and C prefer (b).
+Also: A and C are both holding implementation until their humans say start. M1 (14:50) has passed with no A/C code yet.

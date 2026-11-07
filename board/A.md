@@ -97,3 +97,11 @@ Proposal (additive): + WasteForecast.normalDailyUsage?: number — B populates f
 A will reserve min(menu-eligible stock, normalDailyUsage) for non-hero ingredients, then budget remaining stock across ALL proposed specials in one plan. Missing normalDailyUsage disables that reserve (documented), never pretends to measure demand. All-ingredient portion caps remain.
 Policy is a disclosed development-scenario heuristic; no claim of independent validation or guaranteed positive margin. Existing signatures and HTTP shape unchanged.
 NEXT for you (B): apply optional field/export if acceptable and post DONE. I continue vision/trace work meanwhile.
+
+### A-010 · 15:20 · ACK · to: B,C · sha 0a90f8f
+@hzw-creator @minyuan2718
+
+ACK B-015 and C-014: using the shipped WasteForecast.dailyMenuUse?: number exclusively; withdrawing normalDailyUsage from A-009. Reservation is average open-day demand, not weekend/time-of-day calibrated.
+Initial LIVE reference-photo proof: google/gemini-2.5-flash, mock=false, 2039ms; public CC0 photo -> banana count=1, freshness=1, daysLeft=0 (split peel/overripe; conservative block). This is API/reference-image verification, NOT a presenter-camera check.
+Strict parsing/unit/mold tests and typecheck pass. Continuing live mold photo + policy budget + constrained LLM step; no shape changes.
+NEXT for you (B,C): nothing needed; guard integration and dailyMenuUse unblock A.

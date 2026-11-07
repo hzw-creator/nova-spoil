@@ -56,6 +56,15 @@ export function rand(): number {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
+/** Snapshot/restore the global id sequence + RNG so off-line runs (the replay) leave the live world untouched. */
+export function snapshotGlobals() {
+  return { seq: g.__novaSeq, rng: g.__novaRng };
+}
+export function restoreGlobals(s: { seq?: number; rng?: number }) {
+  g.__novaSeq = s.seq;
+  g.__novaRng = s.rng;
+}
+
 export function resetRng(seed = 1337) {
   g.__novaRng = seed;
   g.__novaSeq = 0;

@@ -38,26 +38,34 @@ export function refreshMetrics(w: WorldState): WorldState {
 
 // ───────────────────────── stock helpers ─────────────────────────
 
-const isSellable = (l: InventoryLot) => l.qty > 0 && l.freshness > 1 && l.daysLeft > 0;
+/**
+ * Kitchen rule: regular menu dishes only use freshness ≥ 3 ("use soon" or better). Freshness-2 ("must use
+ * today": overripe, soft) stock can only go into cooked/baked AI specials. That's the gap Spoil Pricing fills.
+ * Freshness 1 is never used.
+ */
+export const MENU_MIN_FRESHNESS = 3;
+export const SPECIAL_MIN_FRESHNESS = 2;
+
+const isSellable = (l: InventoryLot, minFresh: number) => l.qty > 0 && l.freshness >= minFresh && l.freshness > 1 && l.daysLeft > 0;
 const isAtRiskLot = (l: InventoryLot) => l.daysLeft <= 2 || l.freshness <= 3;
 const isFreshness = (n: unknown): n is Freshness => n === 1 || n === 2 || n === 3 || n === 4 || n === 5;
 
-export function sellableQty(w: WorldState, ingredientId: string): number {
-  return w.inventory.filter((l) => l.ingredientId === ingredientId && isSellable(l)).reduce((s, l) => s + l.qty, 0);
+export function sellableQty(w: WorldState, ingredientId: string, minFresh = SPECIAL_MIN_FRESHNESS): number {
+  return w.inventory.filter((l) => l.ingredientId === ingredientId && isSellable(l, minFresh)).reduce((s, l) => s + l.qty, 0);
 }
 
 /** How many portions of `recipe` current sellable stock can make (min over all recipe lines). */
-export function portionsAvailable(w: WorldState, recipe: Recipe): number {
+export function portionsAvailable(w: WorldState, recipe: Recipe, minFresh = SPECIAL_MIN_FRESHNESS): number {
   if (!recipe.ingredients.length) return 0;
-  return Math.min(...recipe.ingredients.map((l) => (l.qty > 0 ? Math.floor(sellableQty(w, l.ingredientId) / l.qty + EPS) : Infinity)));
+  return Math.min(...recipe.ingredients.map((l) => (l.qty > 0 ? Math.floor(sellableQty(w, l.ingredientId, minFresh) / l.qty + EPS) : Infinity)));
 }
 
 /** Use sellable stock oldest-first (lowest daysLeft). Caller guarantees enough stock. Returns cost of at-risk units used. */
-function consume(w: WorldState, ingredientId: string, qty: number): number {
+function consume(w: WorldState, ingredientId: string, qty: number, minFresh: number): number {
   let remaining = qty;
   let atRiskCost = 0;
   const cost = w.ingredients.find((i) => i.id === ingredientId)?.unitCost ?? 0;
-  const lots = w.inventory.filter((l) => l.ingredientId === ingredientId && isSellable(l)).sort((a, b) => a.daysLeft - b.daysLeft);
+  const lots = w.inventory.filter((l) => l.ingredientId === ingredientId && isSellable(l, minFresh)).sort((a, b) => a.daysLeft - b.daysLeft);
   for (const lot of lots) {
     if (remaining <= EPS) break;
     const take = Math.min(lot.qty, remaining);
@@ -69,10 +77,10 @@ function consume(w: WorldState, ingredientId: string, qty: number): number {
 }
 
 /** Atomically make one portion: all lines or nothing. Returns at-risk cost used per ingredient, or null if short. */
-function makeOne(w: WorldState, recipe: Recipe): Record<string, number> | null {
-  if (portionsAvailable(w, recipe) < 1) return null;
+export function makeOne(w: WorldState, recipe: Recipe, minFresh: number): Record<string, number> | null {
+  if (portionsAvailable(w, recipe, minFresh) < 1) return null;
   const used: Record<string, number> = {};
-  for (const l of recipe.ingredients) used[l.ingredientId] = (used[l.ingredientId] ?? 0) + consume(w, l.ingredientId, l.qty);
+  for (const l of recipe.ingredients) used[l.ingredientId] = (used[l.ingredientId] ?? 0) + consume(w, l.ingredientId, l.qty, minFresh);
   w.inventory = w.inventory.filter((l) => l.qty > 0);
   return used;
 }
@@ -236,10 +244,10 @@ export function tick(minutes: number): WorldState {
       if (!recipe) continue;
       const n = poisson((MENU_ORDERS_PER_HOUR[item.recipeId] ?? 0) / 60);
       for (let k = 0; k < n; k++) {
-        if (!makeOne(w, recipe)) break;
+        if (!makeOne(w, recipe, MENU_MIN_FRESHNESS)) break;
         pushOrder(w, { name: item.name, qty: 1, price: item.price, menuItemId: item.id }, false);
       }
-      item.available = portionsAvailable(w, recipe) >= 1;
+      item.available = portionsAvailable(w, recipe, MENU_MIN_FRESHNESS) >= 1;
     }
 
     // AI specials: demand rises with discount
@@ -260,7 +268,7 @@ export function tick(minutes: number): WorldState {
       const due = Math.floor(expectedSpecialOrders(s.discountPct, 0, minutesLive) + arrivalOffset(s.id));
       const n = Math.max(0, Math.min(due - s.unitsSold, s.unitsAvailable - s.unitsSold));
       for (let k = 0; k < n; k++) {
-        const used = makeOne(w, recipe);
+        const used = makeOne(w, recipe, SPECIAL_MIN_FRESHNESS);
         if (!used) {
           s.status = "sold_out";
           logEvent(w, "special_sold_out", `${s.emoji} ${s.name} ran out of ingredients — ${s.unitsSold} sold`);

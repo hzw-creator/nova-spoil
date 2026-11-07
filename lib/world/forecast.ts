@@ -39,10 +39,18 @@ export function forecastWaste(w: WorldState): WasteForecast[] {
         const expectedUnits = Math.min(Math.max(0, s.unitsAvailable - s.unitsSold), expectedSpecialOrders(s.discountPct, liveNow, liveNow + hours * 60));
         return sum + per * expectedUnits;
       }, 0);
-    const expectedUseBeforeExpiry = atRisk.length ? (use[ing.id] ?? 0) * Math.max(minDaysLeft, 0) + reservedBySpecials : 0;
-    // Unsafe lots (freshness 1) can never be sold: they are always waste.
+    // Kitchen rule (sim.ts MENU_MIN_FRESHNESS): regular dishes only use freshness ≥ 3. Freshness-2 stock gets
+    // no normal demand at all (only specials can use it); freshness 1 is always waste.
     const unsafeQty = atRisk.filter((l) => l.freshness === 1).reduce((s, l) => s + l.qty, 0);
-    const projectedWasteQty = Math.max(unsafeQty, atRiskQty - expectedUseBeforeExpiry, 0);
+    const specialOnlyQty = atRisk.filter((l) => l.freshness === 2).reduce((s, l) => s + l.qty, 0);
+    const menuLots = atRisk.filter((l) => l.freshness >= 3);
+    const menuAtRiskQty = menuLots.reduce((s, l) => s + l.qty, 0);
+    const menuMinDays = menuLots.length ? Math.min(...menuLots.map((l) => l.daysLeft)) : 0;
+    const normalUse = Math.min(menuAtRiskQty, (use[ing.id] ?? 0) * Math.max(menuMinDays, 0));
+    const leftover = specialOnlyQty + (menuAtRiskQty - normalUse);
+    const specialUse = Math.min(leftover, reservedBySpecials);
+    const expectedUseBeforeExpiry = normalUse + specialUse;
+    const projectedWasteQty = unsafeQty + Math.max(0, leftover - specialUse);
     return {
       ingredientId: ing.id,
       onHand,

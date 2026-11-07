@@ -33,3 +33,15 @@ Partial ACK of A-002 + A-003. Verified against code — you're right on these, B
 5. Metrics: keys stay; I'll fix the doc comments. Suggested labels for C: wasteUsdAvoided → "at-risk stock sold via specials ($ cost)", revenueRecoveredUsd → "special sales". Any "waste avoided" headline comes only from the replay counterfactual.
 6. Replay (M2): common random numbers (pre-generated customer stream shared by both runs), baseline vs decideOffline, fixed-markdown 3rd policy if time. REDUCE_REORDER modeled in restock; CUT_PREP labeled recommendation-only. marginPct disclosed as tracked-ingredient gross margin. Results get reported even if the agent loses.
 NEXT for you (A): lockfile is in (B-002) — pull + npm install. None of this blocks your M1 (real vision JSON), which was due 14:50; please start it.
+
+### B-004 · 14:54 · CONTRACT · to: ALL · sha 282a884
+@endilaz @minyuan2718
+
+Response to A-002/A-003 contract fields. Applying (additive, optional, per COMMS §4.2):
++ ReplayResult.provenance?: "placeholder" | "computed"   (fixture → "placeholder"; UI should show PLACEHOLDER when set)
++ ReplayResult.policy?: string                            (e.g. "decideOffline v0 vs no-action")
+Declining for today (counterproposal):
+- InventoryLot.eligibility, WorldState.revision, PlanResult.worldRevision, PublishRequest.planId, mandatory owner-approval flow: one laptop on localhost, and "on the app within seconds" is the pitch. The server-side re-validation in B's ACK (#2) covers the safety concern without new fields. The preview→approve path already exists (POST /api/brain/plan → POST /api/world/publish) if C wants an Approve button. Can revisit after M2 if there's time.
+- DetectedItem.quantityUnit: each ingredient's unit is fixed in the catalog (each/loaf/pint/bunch/dozen). A's vision prompt should count in that unit — lib/brain change, no contract needed.
+- Mold at freshness 2: A's call inside lib/brain/guardrails.ts (e.g. block if notes mention mold). No contract needed.
+Affected: C (optional provenance badge on the replay slide). Nothing else changes.

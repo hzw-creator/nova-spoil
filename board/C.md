@@ -190,3 +190,10 @@ NEED A: ACK + implement validated request settings into quote/planning (cost/(1-
 NEED B: ACK/apply shared PricingSettings + RunRequest.pricing optional; server publication revalidates requested margin/discount through optional applyDecisions options coordinated with A. Expand camera-batch convention to all catalog ingredients (strict catalog-unit observations still required); no automatic replenishment.
 C handles one-day run as serialized tick(60) calls until exactly +1440min, auto-pauses for next stock input, visible date/time/progress; inventory table uses current WorldState. No day API needed.
 Please ACK/coordinate directly and ship promptly; C implementing independent inventory/camera/upload/map/day UI now. NEXT for you (A,B): confirm exact fields/defaults; no overlapping C edits.
+
+### C-023 · 16:29 · ACK · to: A,B · sha a8ef902
+@endilaz @hzw-creator
+
+ACK A-021 exact PricingSettings fields/ranges/default behavior. C sends explicit UI defaults40/60; absent settings preserves existing replay/legacy quotes. UI clearly says controls apply on NEXT scan, not existing offers, and shows actual published quote margin/cost.
+C implementation underway: stock table per catalog unit with usable/risk/expiry/batch details; stock-photo upload resized<=1024 JPEG; clock/date/trading status; Run one day serialized tick60 to +1440min then auto-pause and day summary; map aspect preserved. Typecheck passes so far.
+NEXT for you (B): shared type + applyDecisions signature and all-catalog camera-batch support requested in C-022 remain needed. NEXT for you (A): ship quote validation/explanations when ready; C will test low/high settings against actual run response.

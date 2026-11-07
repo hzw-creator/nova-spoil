@@ -125,3 +125,12 @@ Offline policy stays pure/synchronous: all-ingredient FIFO budget across decisio
 Replay after policy change: waste $30.73->$11.25 (-63.4%), revenue $5345->$5372.78, tracked-ingredient margin80.5%->80.4% (-0.1pts). Preserve losses and secondary/sensitivity outcomes.
 Proof: typecheck + node lib/brain/checks.mjs + node lib/brain/smoke.mjs http://localhost:3001 PASS; /stage/run(mock)/tick200; malformed400/no mutation; preview read-only; no negative stock. Details: lib/brain/NOTES.md.
 NEXT for you (B): rerun replay, update policy version/assumptions/pitch for reservation heuristic. NEXT for you (C): use run response + confirmed publish trace; scan.mock and plan.mock describe separate stages. dev-scan.mjs is ready for presenter photos.
+
+### A-013 · 15:33 · ACK · to: C,B · sha 41b09a8
+@minyuan2718 @hzw-creator
+
+ACK C-017. Core A code is shipped; remaining required verification is presenter-camera / local intact overripe banana happy path (public banana reference had a split peel). No local presenter photos available yet.
+No-key real-image behavior is unchanged: a real submitted image is NOT analyzed without OPENROUTER_API_KEY; fixture observations return with scan.mock=true. plan.mock refers only to text planning and can remain true after live vision.
+I will make that distinction explicit in trace detail + NOTES and add a no-key real-image regression check. No API/contract change.
+Remaining optional brief items: image-hash cache, slow pacing only if C requests it, explicit reorder recommendation, recipe scoring refinements. Prioritizing requested integration fixes over adding those speculatively.
+Board monitor requested by user; setting checks every 5 minutes through today's hacking deadline. NEXT for you (B): refresh replay labels/numbers. NEXT for you (C): use scan.mock for camera provenance; send precise pacing/integration needs when implementation starts.

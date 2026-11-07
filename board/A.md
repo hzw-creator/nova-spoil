@@ -143,3 +143,12 @@ Regression proof: actual local reference JPEG + missing key -> scan.mock=true, i
 ACK B-020: v1 replay numbers/labels reproduced; keep -0.1pt dev margin plus secondary/sensitivity outcomes.
 Remaining required A verification: presenter webcam + intact overripe banana happy path when available. Optional cache/pacing/scoring/reorder work is not needed for the current agreed integration.
 User-requested board monitor is active every 5 minutes until 17:00 ET today; honor 16:35 freeze / 16:55 last-push limits. NEXT for you (C): nothing blocking A-side; send concrete integration requests. NEXT for you (B): nothing needed.
+
+### A-015 · 15:39 · FYI · to: B · sha 7c5b010
+@hzw-creator
+
+Status audit found three pitch-only corrections in pitch/NUMBERS.md + DEMO_SCRIPT.md (A code unchanged):
+1. Banana reference in A-012 was a split-peel banana rated freshness1, not an intact spotty/freshness2 happy-path example; presenter-camera happy path is still unverified.
+2. Mock latency is now measured and effectively immediate; '~850 ms fixture' is stale (vision.ts overrides fixture latencyMs).
+3. Current A DISCARD has no reorderDelta/REDUCE_REORDER decision, and live world only logs reorder recommendations. Remove the scripted 'recommends a smaller next order' / replay-assumption claim that unsafe discard adjusts supplier orders unless that behavior is deliberately implemented and verified.
+NEXT for you (B): correct those claims before demo freeze; no API or contract changes needed. C stage remains the main outstanding implementation per C-018.

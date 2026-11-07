@@ -4,7 +4,7 @@
  * (time-of-day curve, weekday effect), but keep the output type stable.
  */
 import type { WasteForecast, WorldState } from "@/shared/contracts";
-import { MENU_ORDERS_PER_HOUR, OPEN_HOURS_PER_DAY } from "./seed";
+import { MENU_ORDERS_PER_HOUR, OPEN_HOURS_PER_DAY, expectedSpecialOrders } from "./seed";
 
 export function dailyUsage(w: WorldState): Record<string, number> {
   const use: Record<string, number> = {};
@@ -26,12 +26,18 @@ export function forecastWaste(w: WorldState): WasteForecast[] {
     const atRiskQty = atRisk.reduce((s, l) => s + l.qty, 0);
     const minDaysLeft = atRisk.length ? Math.min(...atRisk.map((l) => l.daysLeft)) : Infinity;
     // Normal demand eats the oldest stock first, so at-risk units get used at the daily rate.
-    // Live specials will also consume the hero ingredient (that's the point of them).
+    // A live special only counts its EXPECTED sell-through before the stock expires or the offer ends
+    // (publishing an offer is not the same as selling it; agreed on the board A-003 / B-003).
+    const nowMs = new Date(w.simTime).getTime();
     const reservedBySpecials = w.specials
       .filter((s) => s.status === "live" && s.heroIngredientId === ing.id)
       .reduce((sum, s) => {
         const per = w.recipes.find((r) => r.id === s.recipeId)?.ingredients.find((l) => l.ingredientId === ing.id)?.qty ?? 0;
-        return sum + per * Math.max(0, s.unitsAvailable - s.unitsSold);
+        const hoursToOfferEnd = (new Date(s.expiresAt).getTime() - nowMs) / 3_600_000;
+        const hours = Math.max(0, Math.min(hoursToOfferEnd, Number.isFinite(minDaysLeft) ? minDaysLeft * 24 : hoursToOfferEnd));
+        const liveNow = (nowMs - new Date(s.createdAt).getTime()) / 60_000;
+        const expectedUnits = Math.min(Math.max(0, s.unitsAvailable - s.unitsSold), expectedSpecialOrders(s.discountPct, liveNow, liveNow + hours * 60));
+        return sum + per * expectedUnits;
       }, 0);
     const expectedUseBeforeExpiry = atRisk.length ? (use[ing.id] ?? 0) * Math.max(minDaysLeft, 0) + reservedBySpecials : 0;
     // Unsafe lots (freshness 1) can never be sold: they are always waste.

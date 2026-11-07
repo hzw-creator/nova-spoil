@@ -1,16 +1,22 @@
 /**
  * lib/world/sim.ts — mutations: scans, decisions, ticking the clock. Owner: Agent B.
- * v0 is functional but simple. See agents/agent-b-world.md for what to improve.
+ *
+ * Invariants (agreed on the board, B-005 / B-009):
+ *  - Sales are atomic: an order is recorded only if EVERY recipe line has sellable stock; otherwise no sale.
+ *  - Sellable stock = qty > 0, freshness > 1, daysLeft > 0. Freshness-1 stock is never consumed.
+ *  - Publishing a special re-validates it server-side and caps unitsAvailable by ALL recipe ingredients.
+ *  - A camera scan updates only that ingredient's camera-batch lot (see seed.ts CAMERA_INGREDIENTS).
  */
 import type {
-  AgentDecision, Freshness, InventoryLot, Order, ScanResult, WorldEvent, WorldEventKind, WorldState,
+  AgentDecision, Freshness, InventoryLot, Order, Recipe, ScanResult, Special, WorldEvent, WorldEventKind, WorldState,
 } from "@/shared/contracts";
 import { forecastWaste } from "./forecast";
-import { MENU_ORDERS_PER_HOUR } from "./seed";
+import { CAMERA_INGREDIENTS, MENU_ORDERS_PER_HOUR, cameraLotId, isOpenAt, specialOrdersPerHour } from "./seed";
 import { nextId, rand, world } from "./store";
 
 const MAX_ORDERS = 50;
 const MAX_EVENTS = 40;
+const EPS = 1e-9;
 
 export function logEvent(w: WorldState, kind: WorldEventKind, message: string) {
   const e: WorldEvent = { id: nextId("evt"), at: w.simTime, kind, message };
@@ -23,25 +29,99 @@ export function refreshMetrics(w: WorldState): WorldState {
   return w;
 }
 
-/** Scanned items become "scan" lots (replacing any previous scan lot of the same ingredient). */
+// ───────────────────────── stock helpers ─────────────────────────
+
+const isSellable = (l: InventoryLot) => l.qty > 0 && l.freshness > 1 && l.daysLeft > 0;
+const isAtRiskLot = (l: InventoryLot) => l.daysLeft <= 2 || l.freshness <= 3;
+const isFreshness = (n: unknown): n is Freshness => n === 1 || n === 2 || n === 3 || n === 4 || n === 5;
+
+export function sellableQty(w: WorldState, ingredientId: string): number {
+  return w.inventory.filter((l) => l.ingredientId === ingredientId && isSellable(l)).reduce((s, l) => s + l.qty, 0);
+}
+
+/** How many portions of `recipe` current sellable stock can make (min over all recipe lines). */
+export function portionsAvailable(w: WorldState, recipe: Recipe): number {
+  if (!recipe.ingredients.length) return 0;
+  return Math.min(...recipe.ingredients.map((l) => (l.qty > 0 ? Math.floor(sellableQty(w, l.ingredientId) / l.qty + EPS) : Infinity)));
+}
+
+/** Use sellable stock oldest-first (lowest daysLeft). Caller guarantees enough stock. Returns cost of at-risk units used. */
+function consume(w: WorldState, ingredientId: string, qty: number): number {
+  let remaining = qty;
+  let atRiskCost = 0;
+  const cost = w.ingredients.find((i) => i.id === ingredientId)?.unitCost ?? 0;
+  const lots = w.inventory.filter((l) => l.ingredientId === ingredientId && isSellable(l)).sort((a, b) => a.daysLeft - b.daysLeft);
+  for (const lot of lots) {
+    if (remaining <= EPS) break;
+    const take = Math.min(lot.qty, remaining);
+    lot.qty = Math.round((lot.qty - take) * 1000) / 1000;
+    remaining -= take;
+    if (isAtRiskLot(lot)) atRiskCost += take * cost;
+  }
+  return atRiskCost;
+}
+
+/** Atomically make one portion: all lines or nothing. Returns at-risk cost used per ingredient, or null if short. */
+function makeOne(w: WorldState, recipe: Recipe): Record<string, number> | null {
+  if (portionsAvailable(w, recipe) < 1) return null;
+  const used: Record<string, number> = {};
+  for (const l of recipe.ingredients) used[l.ingredientId] = (used[l.ingredientId] ?? 0) + consume(w, l.ingredientId, l.qty);
+  w.inventory = w.inventory.filter((l) => l.qty > 0);
+  return used;
+}
+
+// ───────────────────────── scans ─────────────────────────
+
+/** Each valid scanned item overwrites its ingredient's camera-batch lot. Everything else is ignored (and logged). */
 export function applyScan(scan: ScanResult): WorldState {
   const w = world();
-  for (const item of scan.items) {
-    if (!item.ingredientId || item.count <= 0) continue;
-    w.inventory = w.inventory.filter((l) => !(l.source === "scan" && l.ingredientId === item.ingredientId));
-    w.inventory.push({
-      id: nextId("lot"),
-      ingredientId: item.ingredientId,
+  const applied: string[] = [];
+  const ignored: string[] = [];
+  for (const item of scan.items ?? []) {
+    const id = item.ingredientId;
+    const valid =
+      !!id && w.ingredients.some((i) => i.id === id) && (CAMERA_INGREDIENTS as readonly string[]).includes(id) &&
+      Number.isFinite(item.count) && item.count >= 0 && isFreshness(item.freshness) && Number.isFinite(item.daysLeft);
+    if (!valid || !id) { ignored.push(item.label || "unknown item"); continue; }
+    if (item.count === 0) {
+      // explicit zero observation clears the camera batch (A-005)
+      w.inventory = w.inventory.filter((l) => l.id !== cameraLotId(id));
+      applied.push(`0× ${item.label} (batch cleared)`);
+      continue;
+    }
+    const lot: InventoryLot = {
+      id: cameraLotId(id),
+      ingredientId: id,
       qty: item.count,
       freshness: item.freshness,
-      daysLeft: item.daysLeft,
+      daysLeft: Math.max(0, item.daysLeft),
       source: "scan",
       updatedAt: w.simTime,
-    });
+    };
+    const i = w.inventory.findIndex((l) => l.id === lot.id);
+    if (i >= 0) w.inventory[i] = lot; else w.inventory.push(lot);
+    applied.push(`${item.count}× ${item.label} (fresh ${item.freshness}/5)`);
   }
-  const summary = scan.items.map((i) => `${i.count}× ${i.label} (fresh ${i.freshness}/5)`).join(", ");
-  logEvent(w, "scan", `Camera scan: ${summary || "nothing recognized"}`);
+  let msg = `Camera scan: ${applied.join(", ") || "nothing recognized"}`;
+  if (ignored.length) msg += ` · ignored (not a camera batch / unreadable): ${ignored.join(", ")}`;
+  logEvent(w, "scan", msg);
   return refreshMetrics(w);
+}
+
+// ───────────────────────── decisions ─────────────────────────
+
+/** Server-side re-validation of a proposed special. Returns the reason it is rejected, or null if OK. */
+function rejectSpecial(w: WorldState, d: AgentDecision, s: Special): string | null {
+  const recipe = w.recipes.find((r) => r.id === s.recipeId);
+  if (!recipe) return `recipe "${s.recipeId}" is not in the recipe book`;
+  if (s.heroIngredientId !== d.ingredientId) return "hero ingredient does not match the decision";
+  if (!recipe.ingredients.some((l) => l.ingredientId === s.heroIngredientId)) return `${recipe.name} does not use ${s.heroIngredientId}`;
+  if (!(Number.isFinite(s.price) && s.price > 0 && Number.isFinite(s.originalPrice) && s.price <= s.originalPrice + EPS)) return "invalid price";
+  if (!(s.discountPct >= 0 && s.discountPct <= 60)) return "discount outside 0–60%";
+  if (!(Number.isFinite(s.unitsAvailable) && s.unitsAvailable >= 1)) return "invalid unitsAvailable";
+  const exp = new Date(s.expiresAt).getTime();
+  if (!(Number.isFinite(exp) && exp > new Date(w.simTime).getTime())) return "invalid or past expiresAt";
+  return null;
 }
 
 export function applyDecisions(decisions: AgentDecision[]): WorldState {
@@ -52,10 +132,19 @@ export function applyDecisions(decisions: AgentDecision[]): WorldState {
     switch (d.action) {
       case "CREATE_SPECIAL": {
         if (!d.special || d.safety?.blocked) break;
+        const reason = rejectSpecial(w, d, d.special);
+        const recipe = w.recipes.find((r) => r.id === d.special!.recipeId);
+        const cap = recipe ? portionsAvailable(w, recipe) : 0;
+        const units = Math.min(Math.max(0, Math.floor(d.special.unitsAvailable)), cap);
+        if (reason || units < 1) {
+          console.warn(`[world] special not published (${d.special.name}): ${reason ?? "not enough sellable stock for every recipe ingredient"}`);
+          break;
+        }
         // one live special per hero ingredient
         w.specials = w.specials.filter((s) => !(s.heroIngredientId === d.ingredientId && s.status === "live"));
-        w.specials.unshift({ ...d.special, status: "live", unitsSold: 0 });
-        logEvent(w, "special_published", `${d.special.emoji} ${d.special.name} live at $${d.special.price.toFixed(2)} (−${d.special.discountPct}%)`);
+        w.specials.unshift({ ...d.special, status: "live", unitsSold: 0, unitsAvailable: units });
+        const capped = units < d.special.unitsAvailable ? ` · capped to ${units} by stock` : "";
+        logEvent(w, "special_published", `${d.special.emoji} ${d.special.name} live at $${d.special.price.toFixed(2)} (−${d.special.discountPct}%)${capped}`);
         break;
       }
       case "DISCARD": {
@@ -63,14 +152,14 @@ export function applyDecisions(decisions: AgentDecision[]): WorldState {
         const qty = unsafe.reduce((s, l) => s + l.qty, 0);
         w.metrics.wasteUsdDiscarded += qty * (ing?.unitCost ?? 0);
         w.inventory = w.inventory.filter((l) => !unsafe.includes(l));
-        logEvent(w, "discarded", `Discarded ${qty} ${name} — unsafe to sell`);
+        logEvent(w, "discarded", `Discarded ${qty} ${name} — freshness 1/5, never sold`);
         break;
       }
       case "CUT_PREP":
-        logEvent(w, "prep_cut", `Prep for ${name} cut ${d.prepCutPct ?? 0}%`);
+        logEvent(w, "prep_cut", `Recommendation: cut ${name} prep ${d.prepCutPct ?? 0}%`);
         break;
       case "REDUCE_REORDER":
-        logEvent(w, "reorder_adjusted", `Next ${name} order changed by ${d.reorderDelta ?? 0}`);
+        logEvent(w, "reorder_adjusted", `Recommendation: change next ${name} order by ${d.reorderDelta ?? 0}`);
         break;
       default:
         break;
@@ -79,24 +168,7 @@ export function applyDecisions(decisions: AgentDecision[]): WorldState {
   return refreshMetrics(w);
 }
 
-/** Use stock oldest-first (lowest daysLeft). Returns cost of at-risk units consumed. */
-function consume(w: WorldState, ingredientId: string, qty: number): number {
-  let remaining = qty;
-  let atRiskCost = 0;
-  const cost = w.ingredients.find((i) => i.id === ingredientId)?.unitCost ?? 0;
-  const lots = w.inventory
-    .filter((l) => l.ingredientId === ingredientId && l.qty > 0 && l.freshness > 1)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
-  for (const lot of lots) {
-    if (remaining <= 0) break;
-    const take = Math.min(lot.qty, remaining);
-    lot.qty = Math.round((lot.qty - take) * 1000) / 1000;
-    remaining -= take;
-    if (lot.daysLeft <= 2 || lot.freshness <= 3) atRiskCost += take * cost;
-  }
-  w.inventory = w.inventory.filter((l) => l.qty > 0);
-  return atRiskCost;
-}
+// ───────────────────────── clock ─────────────────────────
 
 function poisson(lambda: number): number {
   // Knuth; fine for small lambda
@@ -124,15 +196,19 @@ export function tick(minutes: number): WorldState {
     const now = new Date(new Date(w.simTime).getTime() + 60_000);
     w.simTime = now.toISOString();
 
-    // normal menu orders
+    const open = isOpenAt(w.simTime);
+
+    // normal menu orders (a dish we can't fully make is a lost sale, never a phantom one)
     for (const item of w.menu) {
-      const perMin = (MENU_ORDERS_PER_HOUR[item.recipeId] ?? 0) / 60;
-      const n = poisson(perMin);
+      if (!open) break;
+      const recipe = w.recipes.find((r) => r.id === item.recipeId);
+      if (!recipe) continue;
+      const n = poisson((MENU_ORDERS_PER_HOUR[item.recipeId] ?? 0) / 60);
       for (let k = 0; k < n; k++) {
-        const recipe = w.recipes.find((r) => r.id === item.recipeId);
-        recipe?.ingredients.forEach((l) => consume(w, l.ingredientId, l.qty));
+        if (!makeOne(w, recipe)) break;
         pushOrder(w, { name: item.name, qty: 1, price: item.price, menuItemId: item.id }, false);
       }
+      item.available = portionsAvailable(w, recipe) >= 1;
     }
 
     // AI specials: demand rises with discount
@@ -143,17 +219,19 @@ export function tick(minutes: number): WorldState {
         logEvent(w, "special_expired", `${s.name} expired (${s.unitsSold} sold)`);
         continue;
       }
-      const perMin = (2.5 + s.discountPct / 6) / 60; // ~2.5/hr at 0%, ~7.5/hr at 30%
-      const n = Math.min(poisson(perMin), s.unitsAvailable - s.unitsSold);
+      const recipe = w.recipes.find((r) => r.id === s.recipeId);
+      if (!recipe || !open) continue;
+      const minutesLive = (now.getTime() - new Date(s.createdAt).getTime()) / 60_000;
+      const n = Math.min(poisson(specialOrdersPerHour(s.discountPct, minutesLive) / 60), s.unitsAvailable - s.unitsSold);
       for (let k = 0; k < n; k++) {
-        const recipe = w.recipes.find((r) => r.id === s.recipeId);
-        let saved = 0;
-        recipe?.ingredients.forEach((l) => {
-          const c = consume(w, l.ingredientId, l.qty);
-          if (l.ingredientId === s.heroIngredientId) saved += c;
-        });
+        const used = makeOne(w, recipe);
+        if (!used) {
+          s.status = "sold_out";
+          logEvent(w, "special_sold_out", `${s.emoji} ${s.name} ran out of ingredients — ${s.unitsSold} sold`);
+          break;
+        }
         s.unitsSold++;
-        w.metrics.wasteUsdAvoided += saved;
+        w.metrics.wasteUsdAvoided += used[s.heroIngredientId] ?? 0;
         w.metrics.revenueRecoveredUsd += s.price;
         w.metrics.ordersFromSpecials++;
         pushOrder(w, { name: s.name, qty: 1, price: s.price, specialId: s.id }, true);

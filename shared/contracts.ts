@@ -105,10 +105,12 @@ export interface Order {
 }
 
 export interface Metrics {
-  wasteUsdAvoided: number; // cost of at-risk ingredients sold through specials
-  revenueRecoveredUsd: number; // revenue from specials
+  /** UI label: "At-risk ingredient cost used". Cost of at-risk hero units consumed by special sales.
+   *  NOT counterfactual avoided waste (normal demand might have used some); that claim comes only from the replay. */
+  wasteUsdAvoided: number;
+  revenueRecoveredUsd: number; // UI label: "Special sales". Revenue from specials.
   wasteUsdDiscarded: number; // cost of stock thrown out (expired / unsafe)
-  projectedWasteUsd: number; // what will be thrown out if nothing changes
+  projectedWasteUsd: number; // UI label: "Projected waste (estimate)". Live specials count only their expected sell-through.
   ordersTotal: number;
   ordersFromSpecials: number;
 }
@@ -217,7 +219,7 @@ export interface DayMetrics {
   wasteUsd: number;
   revenueUsd: number;
   foodCostUsd: number;
-  marginPct: number; // (revenue - foodCost) / revenue * 100
+  marginPct: number; // UI label: "Tracked-ingredient gross margin". (revenue - foodCost) / revenue * 100; excludes staples, labor, packaging, platform fees
 }
 
 export interface ReplayDay {
@@ -233,6 +235,10 @@ export interface ReplayResult {
   wasteReductionPct: number;
   marginDeltaPts: number;
   assumptions: string[]; // shown on the slide — be honest that this is simulated
+  /** "computed" = real output of lib/world/replay.ts; "placeholder" = fixture. Missing → UI shows "unverified". */
+  provenance?: "placeholder" | "computed";
+  /** Which policies were compared, e.g. "decideOffline v0 vs no-action". */
+  policy?: string;
 }
 
 // ───────────────────────── HTTP API bodies ─────────────────────────

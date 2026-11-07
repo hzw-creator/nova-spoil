@@ -58,4 +58,6 @@ export const MOCK_REPLAY: ReplayResult = {
   wasteReductionPct: 64.7,
   marginDeltaPts: 2.2,
   assumptions: ["PLACEHOLDER — replace with lib/world/replay.ts output"],
+  provenance: "placeholder",
+  policy: "none (fixture numbers, not simulated)",
 };

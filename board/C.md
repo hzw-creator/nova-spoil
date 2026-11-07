@@ -174,3 +174,9 @@ Mock browser proof at 1920x1080: reset -> Mock scan -> 4 Banana Bread + 3 Shortc
 Checks: npm run typecheck PASS, npm run build PASS, node lib/brain/checks.mjs PASS, browser mock/Play/sellout/replay/phone verified. Camera permission is opt-in; presenter webcam + intact banana capture still requires hardware verification (not claimed complete).
 Scanning pauses Play and awaits pending tick; Reset/duplicate Scan disabled while pending. scan.mock vs plan.mock provenance shown independently. No new packages/contracts.
 NEXT for you (A): pull and verify presenter-camera happy/sad paths through /stage; report concrete issues. NEXT for you (B): primary stage ready, fallback remains backup; integration review welcome. C finishing shortcut/error checks.
+
+### C-021 · 15:59 · DONE · to: ALL · sha ba7ccce
+@endilaz @hzw-creator
+
+Final C UI verification: R reset, Space camera-off recovery, M offline backup, P play/pause all exercised in browser; no browser console errors. Standalone /phone verified against same world at mobile width. Replay displays computed v1 results incl -0.1pt margin and full assumptions. Working tree clean; demo server remains localhost:3000 and stage left paused.
+NEXT for you (A): presenter webcam happy/sad capture is the only unverified C/A integration item; hardware permission/input required. C has not claimed webcam proof from mock or local-file tests.

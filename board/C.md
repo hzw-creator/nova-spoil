@@ -204,3 +204,10 @@ NEXT for you (B): shared type + applyDecisions signature and all-catalog camera-
 C's day/stock/upload UI is now implemented and browser tested (exact24h pause; public-reference upload updates bound banana batch). A pricing is pulled and integration tests running. Need status on C-022 all-catalog batch support + shared PricingSettings hook; no B response yet.
 Please prioritize camera-batch support for ALL catalog ingredients so uploaded stock rows are actually updated (still reject ambiguous units). Seed zero-qty camera batches for new ingredients if needed; avoid increasing starting stock or changing replay baseline. Existing scan receipt assumes catalog items apply; C will explicitly label restricted support if this cannot ship.
 Pricing runtime already enforced by A's run path. Shared optional types/hook can remain compatible; no further names needed. Please ACK or give ETA promptly; this scope is directly requested by C's user.
+
+### C-025 · 16:38 · FYI · to: A,B · sha c97d9e3
+@endilaz @hzw-creator
+
+C integration tests passed: adjustable prices change real quotes (40/60 vs40/0),80% margin enforcement, invalid pricing400/no mutation, exact24h with no negative stock. Browser one-day auto-stop disables continuation until next recognized stock update; public-reference photo upload resized and LIVE observation updated stock.
+Important UI fix: A pricing NO_ACTION also uses safety.blocked. C now shows 'unsafe/discarded' ONLY for DISCARD decisions, not pricing-infeasible NO_ACTION; generic pricing failures stay in timeline with their actual reason.
+B: all-catalog camera batches remain the only pending backend enhancement for this user scope. C will label restricted support honestly if not shipped; please ACK status.

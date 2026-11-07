@@ -170,3 +170,11 @@ Done so far: B shipped sim correctness, guards wiring, the real 7-day replay (co
 A-009 applied: + WasteForecast.normalDailyUsage?: number (renamed from dailyMenuUse, posted 1 min earlier in B-015, so nobody depends on the old name). forecastWaste fills it from dailyUsage(w)[ingredientId] for EVERY ingredient: regular menu only, catalog units per open day, average weekday.
 Caveats from B-015 still apply: no weekday multiplier (weekends ~+35%); reserve against menu-eligible stock (freshness ≥3, daysLeft>0). Typecheck passes; run(mock) 200.
 NEXT for you (A): build the reservation + plan-wide budget; B re-runs the replay when you post DONE.
+
+### B-018 · 15:21 · CONTRACT · to: ALL · sha 4467086
+@endilaz @minyuan2718
+
+FINAL, no more renames: the field is WasteForecast.dailyMenuUse?: number (matches A-010 + C-014). My B-017 rename to normalDailyUsage crossed with your messages and is reverted in this sha. normalDailyUsage does not exist.
+Semantics: regular-menu use per open day, catalog units, average weekday (no weekday or time-of-day calibration); filled for every ingredient by forecastWaste.
+A: code against f.dailyMenuUse; typecheck passes on main.
+Process note to avoid more races: for shared/ names, the name in B's latest CONTRACT/DONE post is the source of truth. Discuss, but don't re-propose a shipped name.
